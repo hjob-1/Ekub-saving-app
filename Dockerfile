@@ -1,6 +1,6 @@
 FROM node:alpine
 
-WORKDIR /app/frontend
+WORKDIR /frontend
 
 COPY ./frontend/package.json ./
 
@@ -14,7 +14,7 @@ ENV VITE_API_ENDPOINT=${VITE_API_ENDPOINT}
 
 RUN VITE_API_ENDPOINT=${VITE_API_ENDPOINT} npm run build
 
-WORKDIR /app/backend
+WORKDIR /backend
 
 COPY ./backend/package.json ./
 
