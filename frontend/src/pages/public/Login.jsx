@@ -12,8 +12,6 @@ const Login = () => {
     password: '',
   });
 
-  const [res, setRes] = useState();
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -23,13 +21,11 @@ const Login = () => {
 
     const response = await loginApi(formData.email, formData.password);
     notify(response);
-    setRes(response.status);
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start md:justify-center p-4 pt-15">
       <Logo />
-      {res}
       <div className="bg-white rounded-xl  p-8 w-full max-w-sm shadow-[0px_3px_35px_rgba(0,0,0,0.01),0px_3px_25px_rgba(0,0,0,0.08)]">
         <form className="space-y-4">
           <div className="relative">
