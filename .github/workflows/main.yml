@@ -7,9 +7,9 @@ on:
 env:
   PROJECT_ID: ekub-saving
   GAR_NAME: ekub-saving-repository	
-  GAR_LOCATION: northamerica-northeast2 (Toronto)
+  GAR_LOCATION: northamerica-northeast2
   SERVICE: ekub-saving-app # You can put any name you want here
-  REGION: northamerica-northeast2 (Toronto)
+  REGION: northamerica-northeast2
 jobs:
   deploy:
     environment: production
