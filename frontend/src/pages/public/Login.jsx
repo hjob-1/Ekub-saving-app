@@ -23,7 +23,7 @@ const Login = () => {
 
     const response = await loginApi(formData.email, formData.password);
     notify(response);
-    setRes(response.payload.message);
+    setRes(response.status);
   };
 
   return (
