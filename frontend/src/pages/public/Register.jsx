@@ -32,6 +32,15 @@ const Register = () => {
       formData.password,
     );
     notify(response);
+    // clear the fields
+
+    setFormData(() => ({
+      fullname: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    }));
   };
 
   return (
@@ -48,6 +57,7 @@ const Register = () => {
               name="fullname"
               placeholder="Full name"
               required
+              value={formData.fullname}
               onChange={handleChange}
             />
           </div>
@@ -60,6 +70,7 @@ const Register = () => {
               name="email"
               placeholder="Email address"
               required
+              value={formData.email}
               onChange={handleChange}
             />
           </div>
@@ -72,6 +83,7 @@ const Register = () => {
               name="phone"
               placeholder="Phone"
               required
+              value={formData.phone}
               onChange={handleChange}
             />
           </div>
@@ -84,6 +96,7 @@ const Register = () => {
               name="password"
               placeholder="Password"
               required
+              value={formData.password}
               onChange={handleChange}
             />
           </div>
@@ -96,6 +109,7 @@ const Register = () => {
               name="confirmPassword"
               placeholder="Confirm password"
               required
+              value={formData.confirmPassword}
               onChange={handleChange}
             />
           </div>

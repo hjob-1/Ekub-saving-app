@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { resetPassword } from '../../util/ApiUtil';
+import { useSearchParams } from 'react-router';
 
 const ResetPassword = () => {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -13,8 +17,16 @@ const ResetPassword = () => {
       return;
     }
 
-    // Simulate API request for password reset
-    toast.success('Password reset successful!', { position: 'top-center' });
+    const response = await resetPassword(token, password);
+
+    if (response.status === 1) {
+      // Simulate API request for password reset
+      toast.success('Password reset successful!', { position: 'top-center' });
+    } else {
+      toast.success('somethin went wrong, please try again!', {
+        position: 'top-center',
+      });
+    }
 
     // Clear input fields
     setPassword('');
