@@ -55,7 +55,7 @@ const loginUserController = async (req, res) => {
       return sendResponse(res, 401, 'verify your account first');
     }
     const token = generateToken(user.email);
-    res.setHeader('Authorization', `Bearer ${token}`);
+    res.setHeader('authorization', `${token}`);
     return sendResponse(res, 200, 'Login successful', { ...user._doc });
   } catch (error) {
     logger.error(`User login failed: ${error.message}`, {
