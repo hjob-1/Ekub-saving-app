@@ -46,7 +46,12 @@ export const loginApi = async (email, password) => {
     const url = `${API_BASE_URL}/users/login`;
     const apiResponse = await axios.post(url, { email, password });
     if (apiResponse.status === 200) {
-      response = frameResponse(1, apiResponse.data);
+      const payload = {
+        userData: apiResponse.data.data,
+        message: apiResponse.data.message,
+        token: apiResponse.headers.get('authorization'),
+      };
+      response = frameResponse(1, payload);
     }
   } catch (err) {
     if (err.response) {

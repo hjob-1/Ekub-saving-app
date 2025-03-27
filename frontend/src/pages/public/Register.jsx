@@ -44,7 +44,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start md:justify-center p-4 pt-15">
+    <div className="min-h-screen flex flex-col items-center justify-start md:justify-center p-4 pt-15 bg-gradient-to-br from-blue-100 to-purple-100">
       <Logo />
       <div className="bg-white rounded-xl  p-8 w-full max-w-sm shadow-[0px_3px_35px_rgba(0,0,0,0.01),0px_3px_25px_rgba(0,0,0,0.08)]">
         <form className="space-y-4">
