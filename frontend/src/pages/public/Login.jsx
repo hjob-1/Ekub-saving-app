@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link } from 'react-router';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
 import { GiPayMoney } from 'react-icons/gi';
 import { notify } from '../../util/notify';
 import { loginApi } from '../../util/ApiUtil';
 import Logo from '../../components/logo';
+import { AppContext } from '../../context/applicationContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const appContext = useContext(AppContext);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,11 +22,15 @@ const Login = () => {
     e.preventDefault();
 
     const response = await loginApi(formData.email, formData.password);
+    if (response.status === 1) {
+      appContext.setUserData(response.payload.userData);
+      appContext.setSession(response.payload.token);
+    }
     notify(response);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start md:justify-center p-4 pt-15">
+    <div className="min-h-screen flex flex-col items-center justify-start md:justify-center p-4 pt-15 bg-gradient-to-br from-blue-100 to-purple-100">
       <Logo />
       <div className="bg-white rounded-xl  p-8 w-full max-w-sm shadow-[0px_3px_35px_rgba(0,0,0,0.01),0px_3px_25px_rgba(0,0,0,0.08)]">
         <form className="space-y-4">

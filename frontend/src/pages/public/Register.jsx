@@ -32,10 +32,19 @@ const Register = () => {
       formData.password,
     );
     notify(response);
+    // clear the fields
+
+    setFormData(() => ({
+      fullname: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    }));
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start md:justify-center p-4 pt-15">
+    <div className="min-h-screen flex flex-col items-center justify-start md:justify-center p-4 pt-15 bg-gradient-to-br from-blue-100 to-purple-100">
       <Logo />
       <div className="bg-white rounded-xl  p-8 w-full max-w-sm shadow-[0px_3px_35px_rgba(0,0,0,0.01),0px_3px_25px_rgba(0,0,0,0.08)]">
         <form className="space-y-4">
@@ -48,6 +57,7 @@ const Register = () => {
               name="fullname"
               placeholder="Full name"
               required
+              value={formData.fullname}
               onChange={handleChange}
             />
           </div>
@@ -60,6 +70,7 @@ const Register = () => {
               name="email"
               placeholder="Email address"
               required
+              value={formData.email}
               onChange={handleChange}
             />
           </div>
@@ -72,6 +83,7 @@ const Register = () => {
               name="phone"
               placeholder="Phone"
               required
+              value={formData.phone}
               onChange={handleChange}
             />
           </div>
@@ -84,6 +96,7 @@ const Register = () => {
               name="password"
               placeholder="Password"
               required
+              value={formData.password}
               onChange={handleChange}
             />
           </div>
@@ -96,6 +109,7 @@ const Register = () => {
               name="confirmPassword"
               placeholder="Confirm password"
               required
+              value={formData.confirmPassword}
               onChange={handleChange}
             />
           </div>

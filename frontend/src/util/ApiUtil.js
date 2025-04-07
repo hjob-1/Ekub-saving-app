@@ -1,9 +1,14 @@
 import axios from 'axios';
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const frameToken = (token) => {
   return `Bearer ${token}`;
 };
+export const authHeader = (token) => ({
+  headers: {
+    Authorization: frameToken(token),
+  },
+});
 
 const frameResponse = (
   reqStatus = 0,
@@ -41,7 +46,12 @@ export const loginApi = async (email, password) => {
     const url = `${API_BASE_URL}/users/login`;
     const apiResponse = await axios.post(url, { email, password });
     if (apiResponse.status === 200) {
-      response = frameResponse(1, apiResponse.data);
+      const payload = {
+        userData: apiResponse.data.data,
+        message: apiResponse.data.message,
+        token: apiResponse.headers.get('authorization'),
+      };
+      response = frameResponse(1, payload);
     }
   } catch (err) {
     if (err.response) {
@@ -55,9 +65,9 @@ export const loginApi = async (email, password) => {
 export const verifyEmailApi = async (token) => {
   let response = frameResponse();
   try {
-    const url = `${API_BASE_URL}/users/activate-account?token=${token}`;
+    const url = `${API_BASE_URL}/users/activate-account`;
 
-    const apiResponse = await axios.get(url);
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);
     }
@@ -75,6 +85,112 @@ export const forgotPasswordApi = async (email) => {
   try {
     const url = `${API_BASE_URL}/users/forgot-password`;
     const apiResponse = await axios.post(url, { email });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const resetPassword = async (token, password) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/users/reset-password`;
+    const apiResponse = await axios.post(
+      url,
+      { password },
+      { ...authHeader(token) },
+    );
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+// add memeber to ekub
+
+export const registerUserToEkubApi = async (
+  fullname,
+  email,
+  phone,
+  password = '123',
+  token,
+) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/add-member`;
+    const apiResponse = await axios.post(
+      url,
+      {
+        fullname,
+        email,
+        phone,
+        password,
+        role: 'user',
+      },
+      { ...authHeader(token) },
+    );
+    if (apiResponse.status === 201) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const getEkubMembers = async (token) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/ekub-members`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const deleteEkubMember = async (token, id) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/ekub-member/${id}`;
+    const apiResponse = await axios.delete(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+export const updateEkubMember = async (token, id, data) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/ekub-member/${id}`;
+    const apiResponse = await axios.put(url, data, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);
     }

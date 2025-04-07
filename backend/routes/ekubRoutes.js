@@ -4,7 +4,7 @@ const {
   createEkubInstanceController,
   getEkubMembersController,
   deleteEkubMemberController,
-  updateEkubMember,
+  updateEkubMemberController,
 } = require('../controllers/ekubController');
 const { registerUserController } = require('../controllers/userController');
 const router = express.Router();
@@ -16,6 +16,11 @@ router.delete(
   '/ekub-member/:id',
   roleMiddleware('admin'),
   deleteEkubMemberController,
+);
+router.put(
+  '/ekub-member/:id',
+  roleMiddleware('admin'),
+  updateEkubMemberController,
 );
 // router.put('/ekub-member/:id', roleMiddleware('admin'), updateEkubMember);
 

@@ -51,11 +51,12 @@ const loginUserController = async (req, res) => {
     const { email, password } = req.body;
     const user = await authenticateUser(email, password);
     // is succesffuly token should be genrated
-    if (!user) {
-      return sendResponse(res, 401, 'Invalid credentials');
+    if (user && !user.isEmailVerified) {
+      return sendResponse(res, 401, 'verify your account first');
     }
     const token = generateToken(user.email);
-    return sendResponse(res, 200, 'Login successful', { ...user._doc, token });
+    res.setHeader('authorization', `${token}`);
+    return sendResponse(res, 200, 'Login successful', { ...user._doc });
   } catch (error) {
     logger.error(`User login failed: ${error.message}`, {
       stack: error.stack,
@@ -80,7 +81,10 @@ const updateUserController = async (req, res) => {
 
 const activateAccountController = async (req, res) => {
   try {
-    const { token } = req.query;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Extract token after 'Bearer'
+
+    if (!token) return sendResponse(res, 401, 'access denied');
     await activateAccount(token);
 
     return sendResponse(res, 200, 'Account activated successfully');
@@ -130,8 +134,12 @@ const forgotPasswordController = async (req, res) => {
 
 const resetPasswordController = async (req, res) => {
   try {
-    const { token } = req.query;
     const { password } = req.body;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Extract token after 'Bearer'
+
+    if (!token) return sendResponse(res, 401, 'access denied');
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findOne({ email: decoded.email });
     if (!user) {

@@ -5,6 +5,7 @@ import { verifyEmailApi } from '../../util/ApiUtil';
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
+  const verifyToken = searchParams.get('token');
   const [message, setMessage] = useState('Verifying your account...');
 
   const verifyAccount = async (token) => {
@@ -20,14 +21,12 @@ const VerifyEmail = () => {
   useEffect(() => {
     document.title = 'Verify Email | Feed App';
 
-    const verifyToken = searchParams.get('token');
-
     if (verifyToken) {
       verifyAccount(verifyToken);
     } else {
       setMessage('Invalid verification request.');
     }
-  }, []);
+  }, [verifyToken]);
   return (
     <div className="bg-white">
       <div className="flex justify-center h-screen">
