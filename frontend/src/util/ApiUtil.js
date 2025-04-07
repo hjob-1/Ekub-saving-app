@@ -117,3 +117,88 @@ export const resetPassword = async (token, password) => {
   }
   return response;
 };
+
+// add memeber to ekub
+
+export const registerUserToEkubApi = async (
+  fullname,
+  email,
+  phone,
+  password = '123',
+  token,
+) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/add-member`;
+    const apiResponse = await axios.post(
+      url,
+      {
+        fullname,
+        email,
+        phone,
+        password,
+        role: 'user',
+      },
+      { ...authHeader(token) },
+    );
+    if (apiResponse.status === 201) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const getEkubMembers = async (token) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/ekub-members`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const deleteEkubMember = async (token, id) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/ekub-member/${id}`;
+    const apiResponse = await axios.delete(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+export const updateEkubMember = async (token, id, data) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/ekub-member/${id}`;
+    const apiResponse = await axios.put(url, data, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
