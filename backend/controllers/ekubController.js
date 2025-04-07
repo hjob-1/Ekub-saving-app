@@ -5,7 +5,7 @@ const {
 } = require('../service/ekubService');
 const logger = require('../service/logger');
 const sendResponse = require('../service/responseUtil');
-const { registerUser } = require('../service/userService');
+const { registerUser, updateUserInfo } = require('../service/userService');
 
 // Create an instance of an ekub
 
@@ -66,8 +66,39 @@ const deleteEkubMemberController = async (req, res) => {
   }
 };
 
+const updateEkubMemberController = async (req, res) => {
+  const { id } = req.params;
+  const admin = req.user;
+
+  try {
+    const ekub = await Ekub.findOne({ admin: admin._id });
+    if (!ekub) {
+      return sendResponse(res, 400, 'Ekub not found');
+    }
+
+    const member = ekub.members.find((user) => user._id.toString() === id);
+
+    if (!member) {
+      return sendResponse(res, 400, 'Member not found');
+    }
+    const updatedMember = await updateUserInfo(id, req.body);
+    if (!updatedMember) {
+      return sendResponse(res, 400, 'Failed to update member');
+    }
+
+    await ekub.save();
+    return sendResponse(res, 200, 'Member updated successfully', member);
+  } catch (error) {
+    logger.error(`failed while updating ekub member: ${error.message}`, {
+      stack: error.stack,
+    });
+    return sendResponse(res, 500, 'Server error');
+  }
+};
+
 module.exports = {
   createEkubInstanceController,
   getEkubMembersController,
   deleteEkubMemberController,
+  updateEkubMemberController,
 };
