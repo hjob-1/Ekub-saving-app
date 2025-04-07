@@ -1,17 +1,25 @@
-import Register from '../pages/public/Register';
-import Login from '../pages/public/Login';
 import { Navigate, Route, Routes } from 'react-router';
-import VerifyEmail from '../pages/public/VerifyEmail';
-import ForgotPassword from '../pages/public/ForgotPassword';
-import ResetPassword from '../pages/public/ResetPassword';
+import AppLayout from '../pages/app/layout';
+import ProtectedRoute from './protectedRoute';
+import routes from './routeConfig';
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route exact path="/user/login" element={<Login />} />
-      <Route exact path="/user/register" element={<Register />} />
-      <Route exact path="/user/verify-email" element={<VerifyEmail />} />
-      <Route exact path="/user/forgot-password" element={<ForgotPassword />} />
-      <Route exact path="/user/reset-password" element={<ResetPassword />} />
+      {routes.map(({ path, element, protected: isProtected }) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            isProtected ? (
+              <ProtectedRoute>
+                <AppLayout>{element}</AppLayout>
+              </ProtectedRoute>
+            ) : (
+              element
+            )
+          }
+        />
+      ))}
       <Route path="*" element={<Navigate to="/user/login" replace />} />
     </Routes>
   );
