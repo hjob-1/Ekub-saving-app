@@ -5,7 +5,6 @@ import Login from '../pages/public/Login';
 import VerifyEmail from '../pages/public/VerifyEmail';
 import ForgotPassword from '../pages/public/ForgotPassword';
 import ResetPassword from '../pages/public/ResetPassword';
-import AdminDashboard from '../pages/app/dashboard';
 import UserManagement from '../pages/app/addMember/member';
 
 const routes = [
@@ -38,10 +37,6 @@ const routes = [
   {
     path: '/user/reset-password',
     element: <ResetPassword />,
-  },
-  {
-    path: '/user/dashboard',
-    element: <AdminDashboard />,
   },
 ];
 export default routes;
