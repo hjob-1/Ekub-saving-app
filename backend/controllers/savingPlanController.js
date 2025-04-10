@@ -4,19 +4,14 @@ const SavingPlan = require('../models/SavingPlan');
 const logger = require('../service/logger');
 const sendResponse = require('../service/responseUtil');
 const { generatePayments } = require('../service/paymentService');
+const { getEndDate } = require('../util');
 
 const startSavingPlanController = async (req, res) => {
-  const {
-    name,
-    participants,
-    startDate,
-    endDate,
-    amount,
-    ekubId,
-    paymentPlan,
-  } = req.body;
+  const { name, participants, startDate, amount, ekubId, paymentPlan } =
+    req.body;
 
   try {
+    const endDate = getEndDate(startDate, paymentPlan, participants.length);
     const savingPlan = new SavingPlan({
       name,
       createdBy: req.user._id,
@@ -26,14 +21,13 @@ const startSavingPlanController = async (req, res) => {
       ekubId,
       paymentPlan,
     });
-    if (participants.length > 1) {
+    if (participants.length > 0) {
       for (const participant of participants) {
         savingPlan.participants.push(participant);
       }
     }
     const createdSavingPlan = await savingPlan.save();
     if (createdSavingPlan) {
-      console.log(createdSavingPlan);
       await generatePayments(createdSavingPlan);
     }
 
