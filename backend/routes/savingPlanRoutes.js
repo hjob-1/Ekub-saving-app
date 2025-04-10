@@ -10,9 +10,17 @@ const roleMiddleware = require('../middleware/roleMiddleware');
 const { conductLottery } = require('../service/paymentService');
 const logger = require('../service/logger');
 const sendResponse = require('../service/responseUtil');
+const {
+  authorizeEkubInstance,
+} = require('../middleware/authorizeEKubInstance');
 const router = app.Router();
 
-router.post('/', roleMiddleware('admin'), startSavingPlanController);
+router.post(
+  '/',
+  roleMiddleware('admin'),
+  authorizeEkubInstance,
+  startSavingPlanController,
+);
 router.get('/', roleMiddleware('admin'), getSavingPlansController);
 router.delete('/:id', roleMiddleware('admin'), deleteSavingPlanController);
 

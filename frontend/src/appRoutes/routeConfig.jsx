@@ -6,6 +6,7 @@ import VerifyEmail from '../pages/public/VerifyEmail';
 import ForgotPassword from '../pages/public/ForgotPassword';
 import ResetPassword from '../pages/public/ResetPassword';
 import UserManagement from '../pages/app/addMember/member';
+import SavingPlans from '../pages/app/savingPlan/SavingPlan';
 
 const routes = [
   {
@@ -16,6 +17,11 @@ const routes = [
   {
     path: '/user/addmember',
     element: <UserManagement />,
+    protected: true,
+  },
+  {
+    path: '/user/saving-plan',
+    element: <SavingPlans />,
     protected: true,
   },
   {

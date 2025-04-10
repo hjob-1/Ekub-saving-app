@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT;
 
 export const frameToken = (token) => {
@@ -153,10 +154,12 @@ export const registerUserToEkubApi = async (
   return response;
 };
 
-export const getEkubMembers = async (token) => {
+export const getEkubMembers = async (token, query) => {
   let response = frameResponse();
   try {
-    const url = `${API_BASE_URL}/ekubs/ekub-members`;
+    const url = `${API_BASE_URL}/ekubs/ekub-members ${
+      query ? '?query=' + query : ''
+    }`;
     const apiResponse = await axios.get(url, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);
@@ -191,6 +194,40 @@ export const updateEkubMember = async (token, id, data) => {
   try {
     const url = `${API_BASE_URL}/ekubs/ekub-member/${id}`;
     const apiResponse = await axios.put(url, data, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const createSavingPlanApi = async (token, data) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/saving-plans`;
+    const apiResponse = await axios.post(url, data, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const getSavingPlansApi = async (token, query) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/saving-plans?query=${query}`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);
     }

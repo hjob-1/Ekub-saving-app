@@ -1,4 +1,5 @@
 const Ekub = require('../models/Ekub');
+const User = require('../models/User');
 const {
   createEkubWithAdmin,
   deleteEkubMember,
@@ -33,17 +34,30 @@ const createEkubInstanceController = async (req, res) => {
 // Get all members of an ekub
 const getEkubMembersController = async (req, res) => {
   const admin = req.user;
+  const { query } = req.query;
   try {
-    const ekub = await Ekub.findOne({ admin: admin._id }).populate('members');
+    const ekub = await Ekub.findOne({ admin: admin._id });
     if (!ekub) {
       return sendResponse(res, 400, 'Ekub not found');
     }
-    return sendResponse(
-      res,
-      200,
-      'Members retrieved successfully',
-      ekub.members,
+    const searchFilter = query
+      ? {
+          _id: { $in: ekub.members },
+          $or: [
+            { email: { $regex: query, $options: 'i' } },
+            { fullName: { $regex: query, $options: 'i' } }, // or `name`
+          ],
+        }
+      : { _id: { $in: ekub.members } };
+
+    const users = await User.find(searchFilter).select(
+      '_id email fullname phone',
     );
+    if (!users) {
+      return sendResponse(res, 400, 'No members found');
+    }
+
+    return sendResponse(res, 200, 'Members retrieved successfully', users);
   } catch (error) {
     logger.error(`faild while retriving ekub instance: ${error.message}`, {
       stack: error.stack,
