@@ -9,7 +9,7 @@ const AppContextProvider = ({ children }) => {
   const setSession = (token) => {
     setCookie('appToken', token, {
       path: '/',
-      maxAge: 900, //15minutes
+      maxAge: 1296000, //2weeks
     });
   };
   const getSession = () => {
