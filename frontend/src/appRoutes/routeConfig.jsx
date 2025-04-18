@@ -6,16 +6,17 @@ import VerifyEmail from '../pages/public/VerifyEmail';
 import ForgotPassword from '../pages/public/ForgotPassword';
 import ResetPassword from '../pages/public/ResetPassword';
 import UserManagement from '../pages/app/addMember/member';
-import SavingPlans from '../pages/app/savingPlan/SavingPlan';
+import SavingPlans from '../pages/app/SavingPlan';
+import SavingPlanDetailPage from '../pages/app/SavingPlanDetailPage';
 
 const routes = [
   {
-    path: '/user/dashboard2',
-    element: <h1>This is layout</h1>,
+    path: '/user/saving-plan/:id',
+    element: <SavingPlanDetailPage />,
     protected: true,
   },
   {
-    path: '/user/addmember',
+    path: '/user/members',
     element: <UserManagement />,
     protected: true,
   },

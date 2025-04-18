@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
-import Sidebar from '../../components/Sidebar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router';
 
 function AppLayout({ children }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
+  const toggleMenu = () => setMenuOpen(!menuOpen);
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
-      {/* Sidebar */}
-      <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      {/* Main Content */}
-      <div className="flex-1 p-4 md:ml-20">
-        {/* Navbar */}
-        <nav className="flex justify-between items-center mb-4">
-          <button className="md:hidden" onClick={toggleSidebar}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md ">
+        <div className="max-w-screen-xl mx-auto px-4 px-6 py-2 flex justify-between items-center">
+          <h1 className="relative text-xl font-bold tracking-wide">Equb</h1>
+
+          {/* Hamburger (Mobile) */}
+          <button className="md:hidden" onClick={toggleMenu}>
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-6 w-6 "
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -32,16 +29,53 @@ function AppLayout({ children }) {
               />
             </svg>
           </button>
-          <h1 className="text-xl font-semibold">Equb</h1>{' '}
-          <div>
-            {/* Add user profile, notifications, etc. */}
-            <button className="ml-4">Profile</button>
-          </div>
-        </nav>
 
-        {/* Content Area */}
-        <main>{children}</main>
-      </div>
+          {/* Desktop Menu */}
+          <div className="hidden md:flex space-x-6">
+            <button className="hover:underline">Home</button>
+            <button className="hover:underline">Profile</button>
+          </div>
+          {/* Mobile Dropdown */}
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="absolute top-[45px] left-0 right-0 bg-white text-[#4F46E5] shadow-md z-40 md:hidden px-6 py-4 rounded-b-xl"
+              >
+                <Link to="/user/members">
+                  <button
+                    onClick={toggleMenu}
+                    className="block w-full text-left py-2 hover:underline"
+                  >
+                    Members
+                  </button>
+                </Link>
+                <Link to="/user/saving-plan">
+                  <button
+                    onClick={toggleMenu}
+                    className="block w-full text-left py-2 hover:underline"
+                  >
+                    Saving plans
+                  </button>
+                </Link>
+
+                <button
+                  onClick={toggleMenu}
+                  className="block w-full text-left py-2 hover:underline"
+                >
+                  Account
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-screen-xl mx-auto px-4">{children}</main>
     </div>
   );
 }

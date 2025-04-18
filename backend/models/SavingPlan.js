@@ -42,6 +42,7 @@ const SavingPlanSchema = new mongoose.Schema({
   winners: [
     {
       email: String,
+      dueDate: Date,
     },
   ],
   lastLotteryDate: {
