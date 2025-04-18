@@ -1,7 +1,7 @@
 import { CalenderSvg } from '../../assets/icons/calenderSvg';
 import { DollarSvg } from '../../assets/icons/DollarSvg';
 import { PeopleSvg } from '../../assets/icons/peopleSvg';
-import StatsCard from '../StatsCard';
+import StatsCard from '../statsCard';
 const StatsCards = ({ stats }) => {
   const statsData = [
     {
