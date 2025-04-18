@@ -5,6 +5,7 @@ const logger = require('../service/logger');
 const sendResponse = require('../service/responseUtil');
 const { generatePayments } = require('../service/paymentService');
 const { getEndDate } = require('../util');
+const User = require('../models/User');
 
 const startSavingPlanController = async (req, res) => {
   const { name, participants, startDate, amount, ekubId, paymentPlan } =
@@ -84,17 +85,28 @@ const deleteSavingPlanController = async (req, res) => {
 
 const getSavingPlanPaymentsController = async (req, res) => {
   const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
   try {
-    const savingPlan = await Payment.find({ planId: id }).populate('userId');
-    if (!savingPlan) {
+    // Count total number of payments for that saving plan
+    const totalPayments = await Payment.countDocuments({
+      savingPlan: id,
+    });
+    // Calculate how many pages
+    const totalPages = Math.ceil(totalPayments / limit);
+    const payments = await Payment.find({ savingPlan: id })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('user', 'fullname phone email');
+    if (!payments) {
       return sendResponse(res, 400, 'Saving plan not found');
     }
-    return sendResponse(
-      res,
-      200,
-      'Payments retrieved successfully',
-      savingPlan,
-    );
+    return sendResponse(res, 200, 'Payments retrieved successfully', {
+      currentPage: page,
+      totalPages,
+      totalPayments,
+      payments,
+    });
   } catch (error) {
     logger.error(
       `faild while retriving saving plan payments: ${error.message}`,
@@ -128,10 +140,112 @@ const updatePaymentController = async (req, res) => {
   }
 };
 
+const getSavingStats = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const savingPlan = await SavingPlan.findById(id).populate('participants');
+    if (!savingPlan) {
+      return sendResponse(res, 400, 'Saving plan not found');
+    }
+    const payments = await Payment.find({ savingPlan: id });
+    const totalPayments = payments.length;
+    const totalParticipants = savingPlan.participants.length;
+    const totalAmount = savingPlan.amount * totalPayments;
+    const startDate = new Date(savingPlan.startDate);
+    const endDate = new Date(savingPlan.endDate);
+    const winners = savingPlan.winners.length;
+
+    // Calculate duration in milliseconds
+    const msBetween = endDate.getTime() - startDate.getTime();
+    const daysBetween = msBetween / (1000 * 60 * 60 * 24);
+
+    let duration = 0;
+
+    switch (savingPlan.paymentPlan) {
+      case 'weekly':
+        duration = Math.ceil(daysBetween / 7) + ' weeks';
+        break;
+      case 'biweekly':
+        duration = Math.ceil(daysBetween / 14) + ' biweeks';
+        break;
+      case 'monthly':
+        const yearDiff = endDate.getFullYear() - startDate.getFullYear();
+        const monthDiff = endDate.getMonth() - startDate.getMonth();
+        duration = yearDiff * 12 + monthDiff + 1 + ' months';
+        break;
+      default:
+        duration = 0;
+    }
+
+    return sendResponse(res, 200, 'Saving plan stats retrieved successfully', {
+      totalPayments,
+      totalParticipants,
+      totalAmount,
+      duration,
+      winners,
+    });
+  } catch (error) {
+    logger.error(`faild while retriving saving plan stats: ${error.message}`, {
+      stack: error.stack,
+    });
+    return sendResponse(res, 500, 'Server error');
+  }
+};
+
+const getParticipantsExcludingWinner = async (req, res) => {
+  const { id } = req.params;
+  const { fullname } = req.query;
+
+  try {
+    // First find the saving plan to get the winner's email
+    const savingPlan = await SavingPlan.findById(id).select(
+      'participants winners.email',
+    );
+    if (!savingPlan) {
+      return sendResponse(res, 404, 'Saving plan not found');
+    }
+
+    // Build the base query to exclude winner
+
+    const winners = savingPlan.winners.map((w) => w.email);
+    let participantsQuery = {
+      _id: { $in: savingPlan.participants },
+      email: { $nin: winners }, // Exclude winner by email
+    };
+    // Add fullname filter if provided
+    if (fullname) {
+      participantsQuery.fullname = { $regex: fullname, $options: 'i' }; // Case-insensitive search
+    }
+
+    // Execute the query with only necessary fields
+    const filteredParticipants = await User.find(participantsQuery)
+      .select('fullname email phone') // Only return needed fields
+      .lean();
+
+    return sendResponse(
+      res,
+      200,
+      'Participants retrieved successfully',
+      filteredParticipants,
+    );
+  } catch (error) {
+    logger.error(
+      `Failed while retrieving saving plan participants: ${error.message}`,
+      {
+        stack: error.stack,
+        savingPlanId: id,
+      },
+    );
+    return sendResponse(res, 500, 'Internal server error');
+  }
+};
+
 module.exports = {
   startSavingPlanController,
   getSavingPlansController,
   deleteSavingPlanController,
   getSavingPlanPaymentsController,
   updatePaymentController,
+  getSavingStats,
+  getParticipantsExcludingWinner,
 };

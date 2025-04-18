@@ -64,29 +64,46 @@ const conductLottery = async (
   savingPlanId,
   isManual = false,
   roundDate,
+  excludedUsers,
 ) => {
   try {
     const savingPlan = await SavingPlan.findById(savingPlanId).populate(
       'participants',
     );
     if (!savingPlan) {
-      throw new Error('Saving Plan not found');
+      return sendResponse(res, 400, 'saving plan not found');
     }
-    const lastLotteryDate = dayjs(
-      savingPlan.lastLotteryDate || savingPlan.startDate,
+    // Step 1: Get all dueDates from Payment for this plan
+    const allDueDates = await Payment.find({
+      savingPlan: savingPlanId,
+    }).distinct('dueDate');
+
+    // Step 2: Filter dueDates already used
+    const usedDates = savingPlan.winners
+      .filter((w) => w.dueDate) // make sure dueDate exists
+      .map((w) => w.dueDate.toISOString());
+
+    const unusedDueDates = allDueDates.filter(
+      (date) => !usedDates.includes(new Date(date).toISOString()),
     );
+
+    if (unusedDueDates.length === 0) {
+      return sendResponse(
+        res,
+        400,
+        'No due dates left for drawing. All rounds have winners.',
+      );
+    }
+
+    // Step 3: Pick the earliest available round
+    const nextDueDate = new Date(unusedDueDates.sort()[0]);
 
     // Fetch users who have paid for the current period
     const paidUsers = await Payment.find({
       savingPlan: savingPlanId,
       isPaid: true,
-      dueDate: {
-        $lte: new Date(roundDate),
-        $gte: lastLotteryDate.toDate(),
-      },
+      dueDate: nextDueDate,
     }).populate('user');
-    console.log('round date', new Date(roundDate));
-    console.log('padi users', paidUsers);
 
     if (paidUsers.length === 0) {
       return sendResponse(
@@ -99,9 +116,13 @@ const conductLottery = async (
     // Get previous winners
     const previousWinners = savingPlan.winners.map((winner) => winner.email);
     const paidUsersEmail = paidUsers.map((user) => user.user.email);
+
+    const excludedUsersEmail = [
+      ...new Set([...previousWinners, ...(excludedUsers || [])]),
+    ];
     // Filter out previous winners
     const eligibleUsers = await User.find({
-      email: { $in: paidUsersEmail, $nin: previousWinners },
+      email: { $in: paidUsersEmail, $nin: excludedUsersEmail },
     });
 
     if (eligibleUsers.length === 0) {
@@ -117,18 +138,21 @@ const conductLottery = async (
     const winner = eligibleUsers[randomIndex];
 
     // Save winner to the database
-    savingPlan.winners.push({ email: winner.email });
+    savingPlan.winners.push({ email: winner.email, dueDate: nextDueDate });
     savingPlan.lastLotteryDate = roundDate;
     await savingPlan.save();
 
     console.log(`Winner: ${winner.email}`);
 
-    // Send notification email
-    const allUsers = await User.find();
     await sendEmail({
       winner,
       participants: savingPlan.participants,
       type: 'lottery',
+    });
+    return sendResponse(res, 200, 'Lottery draw successful', {
+      fullname: winner.fullname,
+      email: winner.email,
+      phone: winner.phone,
     });
   } catch (error) {
     console.error(error.message);

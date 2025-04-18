@@ -25,8 +25,8 @@ const getEmailTemplate = (emailInfo) => {
       return getPasswordResetTemplate(emailInfo.user, emailInfo.resetToken);
     case 'lottery':
       return getLotteryAnnouncementTemplate(
-        emailInfo.participants,
         emailInfo.winner,
+        emailInfo.participants,
       );
     default:
       throw new Error('Unknown email type.');
@@ -36,8 +36,8 @@ const getEmailTemplate = (emailInfo) => {
 const sendEmail = async (emailInfo) => {
   mailOptions = getEmailTemplate(emailInfo);
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('Activation email sent successfully!');
+    const response = await transporter.sendMail(mailOptions);
+    return response;
   } catch (error) {
     console.log('Error sending email: ' + error.message);
   }
