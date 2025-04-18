@@ -1,11 +1,11 @@
 // import { dummyPlans } from '../constants/dummyPlans';
 import { FiUsers, FiTrendingUp, FiCalendar } from 'react-icons/fi';
-import PerformanceCard from '../../../components/PerformanceCard';
-import PlanCard from '../../../components/PlanTable';
-import CreateSavingPlanForm from '../../../components/CreateSavingPlan';
-import { notify } from '../../../util/notify';
-import { createSavingPlanApi, getSavingPlansApi } from '../../../util/ApiUtil';
-import { useToken } from '../../../context/getToken';
+import PerformanceCard from '../../components/PerformanceCard';
+import PlanCard from '../../components/PlanTable';
+import CreateSavingPlanForm from '../../components/CreateSavingPlan';
+import { notify } from '../../util/notify';
+import { createSavingPlanApi, getSavingPlansApi } from '../../util/ApiUtil';
+import { useToken } from '../../context/getToken';
 import { useEffect, useState } from 'react';
 
 export default function SavingPlans() {
