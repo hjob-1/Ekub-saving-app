@@ -9,10 +9,10 @@ import useMultiSelect from '../../pages/app/hooks/useMultiSelect';
 import { drawWinnerApi, getEkubMembers } from '../../util/ApiUtil';
 import { notify } from '../../util/notify';
 
-const WinnerDrawModal = () => {
+const WinnerDrawModal = ({ savingId }) => {
   const [loading, setLoading] = useState(false);
   const [winner, setWinner] = useState(null);
-  const savingId = '6801c0b666939642aa92cb20';
+
   const token = useToken();
 
   const {

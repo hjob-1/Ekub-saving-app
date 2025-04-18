@@ -1,7 +1,7 @@
 import React from 'react';
 const defaultTabs = [
-  { key: 'week', label: 'Current Week' },
-  { key: 'Winners', label: 'Winners' },
+  { key: 'payment', label: 'Payment List' },
+  { key: 'winners', label: 'Winners' },
   { key: 'all', label: 'All' },
 ];
 export default function TabPanel({ tabs = defaultTabs, tab, setTab }) {

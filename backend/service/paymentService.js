@@ -82,11 +82,11 @@ const conductLottery = async (
     const usedDates = savingPlan.winners
       .filter((w) => w.dueDate) // make sure dueDate exists
       .map((w) => w.dueDate.toISOString());
-
+    console.log('usedDates', usedDates);
     const unusedDueDates = allDueDates.filter(
       (date) => !usedDates.includes(new Date(date).toISOString()),
     );
-
+    console.log('unusedDueDates', unusedDueDates);
     if (unusedDueDates.length === 0) {
       return sendResponse(
         res,

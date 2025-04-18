@@ -102,10 +102,13 @@ const getSavingPlanPaymentsController = async (req, res) => {
       return sendResponse(res, 400, 'Saving plan not found');
     }
     return sendResponse(res, 200, 'Payments retrieved successfully', {
-      currentPage: page,
-      totalPages,
-      totalPayments,
-      payments,
+      data: payments,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: totalPayments,
+        itemsPerPage: limit,
+      },
     });
   } catch (error) {
     logger.error(
@@ -183,6 +186,10 @@ const getSavingStats = async (req, res) => {
       totalAmount,
       duration,
       winners,
+      name: savingPlan.name,
+      startDate: savingPlan.startDate,
+      endDate: savingPlan.endDate,
+      paymentPlan: savingPlan.paymentPlan,
     });
   } catch (error) {
     logger.error(`faild while retriving saving plan stats: ${error.message}`, {
@@ -240,6 +247,121 @@ const getParticipantsExcludingWinner = async (req, res) => {
   }
 };
 
+const getWinnersController = async (req, res) => {
+  const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  try {
+    // Fetch saving plan with winners
+    const savingPlan = await SavingPlan.findById(id).lean();
+
+    if (!savingPlan) {
+      return sendResponse(res, 404, 'Saving plan not found');
+    }
+
+    const allWinners = savingPlan.winners || [];
+    const totalWinners = allWinners.length;
+
+    if (totalWinners === 0) {
+      return sendResponse(res, 200, 'No winners found', {
+        data: [],
+        pagination: {
+          currentPage: page,
+          totalPages: 0,
+          totalItems: 0,
+          itemsPerPage: limit,
+        },
+      });
+    }
+
+    // Slice winners array for pagination
+    const paginatedWinners = allWinners.slice(skip, skip + limit);
+
+    // Get unique emails for this page
+    const uniqueEmails = [...new Set(paginatedWinners.map((w) => w.email))];
+
+    // Fetch user details
+    const users = await User.find(
+      { email: { $in: uniqueEmails } },
+      { email: 1, fullname: 1, phone: 1 },
+    ).lean();
+
+    const userMap = users.reduce((acc, user) => {
+      acc[user.email] = user;
+      return acc;
+    }, {});
+
+    // Construct final winner list with details
+    const winnersWithDetails = paginatedWinners.map((winner) => ({
+      email: winner.email,
+      fullname: userMap[winner.email]?.fullname || 'N/A',
+      phone: userMap[winner.email]?.phone || 'N/A',
+      wonDate: winner.dueDate,
+    }));
+
+    return sendResponse(res, 200, 'Winners retrieved successfully', {
+      data: winnersWithDetails,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalWinners / limit),
+        totalItems: totalWinners,
+        itemsPerPage: limit,
+      },
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    return sendResponse(res, 500, 'Internal server error', error.message);
+  }
+};
+
+const getSavingPlanParticipants = async (req, res) => {
+  const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10; // default to 10 per page
+  const skip = (page - 1) * limit;
+
+  try {
+    // Step 1: Find the saving plan and get participant IDs only
+    const savingPlan = await SavingPlan.findById(id).select('participants');
+    if (!savingPlan) {
+      return sendResponse(res, 400, 'Saving plan not found');
+    }
+
+    const total = savingPlan.participants.length;
+
+    // Step 2: Paginate the participant IDs
+    const paginatedIds = savingPlan.participants.slice(skip, skip + limit);
+
+    // Step 3: Populate user data for paginated IDs
+    const participants = await User.find({ _id: { $in: paginatedIds } })
+      .select('fullname phone email')
+      .lean();
+
+    return sendResponse(
+      res,
+      200,
+      'Saving plan participants retrieved successfully',
+      {
+        data: participants,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalItems: total,
+          itemsPerPage: limit,
+        },
+      },
+    );
+  } catch (error) {
+    logger.error(
+      `Failed while retrieving saving plan participants: ${error.message}`,
+      { stack: error.stack },
+    );
+    return sendResponse(res, 500, 'Server error');
+  }
+};
+
 module.exports = {
   startSavingPlanController,
   getSavingPlansController,
@@ -248,4 +370,6 @@ module.exports = {
   updatePaymentController,
   getSavingStats,
   getParticipantsExcludingWinner,
+  getWinnersController,
+  getSavingPlanParticipants,
 };

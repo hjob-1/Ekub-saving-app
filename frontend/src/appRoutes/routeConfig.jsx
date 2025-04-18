@@ -11,12 +11,12 @@ import SavingPlanDetailPage from '../pages/app/SavingPlanDetailPage';
 
 const routes = [
   {
-    path: '/user/dashboard2',
+    path: '/user/saving-plan/:id',
     element: <SavingPlanDetailPage />,
     protected: true,
   },
   {
-    path: '/user/addmember',
+    path: '/user/members',
     element: <UserManagement />,
     protected: true,
   },

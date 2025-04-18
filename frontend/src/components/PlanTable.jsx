@@ -1,4 +1,4 @@
-// import DropdownMenu from './DropdownMenu';
+import { Link } from 'react-router';
 
 const PlanCard = ({ plan }) => {
   const visibleMembers = plan.participants.slice(0, 3);
@@ -15,7 +15,9 @@ const PlanCard = ({ plan }) => {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition">
       <div className="flex justify-between items-start mb-3">
-        <h2 className="text-xl font-bold text-purple-800">{plan.name}</h2>
+        <h2 className="text-xl font-bold text-purple-800">
+          <Link to={`/user/saving-plan/${plan._id}`}>{plan.name}</Link>
+        </h2>
         <div className="flex gap-2">
           <span
             className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor()}`}

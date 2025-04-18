@@ -5,13 +5,12 @@ import {
   FiBell,
   FiSettings,
 } from 'react-icons/fi';
+import { Link } from 'react-router';
 
 const navItems = [
-  { label: 'Dashboard', icon: <FiGrid /> },
-  { label: 'Members', icon: <FiUsers /> },
-  { label: 'Saving Plans', icon: <FiDollarSign /> },
-  { label: 'Payments', icon: <FiDollarSign /> },
-  { label: 'Lottery', icon: <FiBell /> },
+  { label: 'Dashboard', icon: <FiGrid />, to: '/user/dashboard' },
+  { label: 'Members', icon: <FiUsers />, to: '/user/members' },
+  { label: 'Saving Plans', icon: <FiDollarSign />, to: '/user/saving-plan' },
   { label: 'Account', icon: <FiSettings />, section: 'Settings' },
 ];
 
@@ -44,14 +43,13 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         </div>
 
         <ul>
-          {navItems.map(({ label, icon }, i) => (
-            <li
-              key={i}
-              className="flex items-center gap-3 mb-4 text-gray-700 hover:text-purple-700 cursor-pointer"
-            >
-              {icon}
-              {label}
-            </li>
+          {navItems.map(({ label, icon, to }, i) => (
+            <Link to={to} key={i}>
+              <li className="flex items-center gap-3 mb-4 text-gray-700 hover:text-purple-700 cursor-pointer">
+                {icon}
+                {label}
+              </li>
+            </Link>
           ))}
         </ul>
       </div>

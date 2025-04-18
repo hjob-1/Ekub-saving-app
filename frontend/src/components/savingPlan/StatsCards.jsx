@@ -6,18 +6,18 @@ const StatsCards = ({ stats }) => {
   const statsData = [
     {
       title: 'Total Money',
-      value: `$${stats?.totalAmount}`,
+      value: `$${stats?.totalAmount || 'NA'}`,
       Icon: <DollarSvg className="h-6 w-6 text-white" />,
     },
     {
       title: 'Active Members',
-      value: stats?.totalParticipants,
+      value: stats?.totalParticipants || 'NA',
       Icon: <PeopleSvg className="h-6 w-6 text-white" />,
       iconBgColor: 'bg-green-500',
     },
     {
       title: 'Duration',
-      value: `${stats?.duration}`,
+      value: `${stats?.duration || 'NA'}`,
       Icon: <CalenderSvg className="h-6 w-6 text-white" />,
       iconBgColor: 'bg-blue-500',
     },

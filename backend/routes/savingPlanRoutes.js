@@ -7,6 +7,8 @@ const {
   updatePaymentController,
   getSavingStats,
   getParticipantsExcludingWinner,
+  getWinnersController,
+  getSavingPlanParticipants,
 } = require('../controllers/savingPlanController');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const { conductLottery } = require('../service/paymentService');
@@ -75,10 +77,18 @@ router.post(
 );
 // saving plan participants
 router.get(
-  '/:id/participants',
+  '/:id/participants/excluding-winner',
   roleMiddleware('admin'),
   authorizeEkubInstance,
   getParticipantsExcludingWinner,
 );
 router.get('/:id/stats', roleMiddleware('admin'), getSavingStats);
+
+router.get('/:id/winners', roleMiddleware('admin'), getWinnersController);
+router.get(
+  '/:id/participants',
+  roleMiddleware('admin'),
+  authorizeEkubInstance,
+  getSavingPlanParticipants,
+);
 module.exports = router;

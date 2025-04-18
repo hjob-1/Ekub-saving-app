@@ -302,11 +302,32 @@ export const drawWinnerApi = async (token, id, excludedUsers) => {
     const apiResponse = await axios.post(
       url,
       {
-        dueDate: '2025-04-29T00:00:00.000+00:00',
         excludedUsers: excludedUsers,
       },
       { ...authHeader(token) },
     );
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const getSavingPlanWinnersApi = async (
+  token,
+  id,
+  page = 1,
+  limit = 5,
+) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/saving-plans/${id}/winners?page=${page}&limit=${limit}`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);
     }
