@@ -5,8 +5,13 @@ const {
   getEkubMembersController,
   deleteEkubMemberController,
   updateEkubMemberController,
+
+  getEkubDashboardStats,
 } = require('../controllers/ekubController');
 const { registerUserController } = require('../controllers/userController');
+const {
+  authorizeEkubInstance,
+} = require('../middleware/authorizeEKubInstance');
 const router = express.Router();
 
 router.post('/create', roleMiddleware('manager'), createEkubInstanceController);
@@ -21,6 +26,12 @@ router.put(
   '/ekub-member/:id',
   roleMiddleware('admin'),
   updateEkubMemberController,
+);
+router.get(
+  '/dashboard-stats',
+  roleMiddleware('admin'),
+  authorizeEkubInstance,
+  getEkubDashboardStats,
 );
 // router.put('/ekub-member/:id', roleMiddleware('admin'), updateEkubMember);
 

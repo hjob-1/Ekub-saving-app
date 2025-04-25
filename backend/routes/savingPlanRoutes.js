@@ -9,6 +9,8 @@ const {
   getParticipantsExcludingWinner,
   getWinnersController,
   getSavingPlanParticipants,
+  getDashboardStatsController,
+  getSavingPlansSummary,
 } = require('../controllers/savingPlanController');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const { conductLottery } = require('../service/paymentService');
@@ -91,4 +93,11 @@ router.get(
   authorizeEkubInstance,
   getSavingPlanParticipants,
 );
+router.get(
+  '/stats',
+  roleMiddleware('admin'),
+  authorizeEkubInstance,
+  getSavingPlansSummary,
+);
+
 module.exports = router;

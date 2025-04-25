@@ -1,4 +1,7 @@
+const { default: mongoose } = require('mongoose');
 const Ekub = require('../models/Ekub');
+const Payment = require('../models/Payment');
+const SavingPlan = require('../models/SavingPlan');
 const User = require('../models/User');
 const {
   createEkubWithAdmin,
@@ -110,9 +113,108 @@ const updateEkubMemberController = async (req, res) => {
   }
 };
 
+const getEkubDashboardStats = async (req, res) => {
+  try {
+    const { ekubId } = req.body;
+
+    if (!ekubId) {
+      return res.status(400).json({ error: 'ekubId is required' });
+    }
+
+    // Get ekub details (and members)
+    const ekub = await Ekub.findById(ekubId).populate('members');
+
+    if (!ekub) {
+      return res.status(404).json({ error: 'Ekub not found' });
+    }
+
+    // All users in this Ekub
+    const totalMembers = ekub.members.length;
+
+    // Saving Plans for this ekub
+    const savingPlans = await SavingPlan.find({ ekubId });
+
+    const totalSavingPlans = savingPlans.length;
+    const ongoingPlans = savingPlans.filter(
+      (sp) => new Date(sp.endDate) > new Date(),
+    ).length;
+    const completedPlans = totalSavingPlans - ongoingPlans;
+
+    const savingPlanIds = savingPlans.map((sp) => sp._id);
+
+    // Total money collected so far (only paid payments)
+    const collected = await Payment.aggregate([
+      { $match: { savingPlan: { $in: savingPlanIds }, isPaid: true } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]);
+
+    const totalCollected = collected[0]?.total || 0;
+
+    const recentWinners = await SavingPlan.aggregate([
+      { $match: { ekubId: new mongoose.Types.ObjectId(ekubId) } }, // filter by ekub
+      { $unwind: '$winners' }, // flatten winners array
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'winners.email',
+          foreignField: 'email',
+          as: 'userDetails',
+        },
+      },
+      { $unwind: { path: '$userDetails', preserveNullAndEmptyArrays: true } },
+      { $sort: { 'winners.dueDate': 1 } },
+      { $limit: 2 },
+      {
+        $project: {
+          _id: 0,
+          savingName: '$name',
+          email: '$winners.email',
+          dueDate: '$winners.dueDate',
+          fullname: '$userDetails.fullname',
+          phone: '$userDetails.phone',
+          amount: {
+            $multiply: ['$amount', { $size: '$participants' }],
+          },
+        },
+      },
+    ]);
+
+    // New users added in the last 7 days
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const newUsers = ekub.members
+      .filter((user) => {
+        return user.createdAt >= oneWeekAgo;
+      })
+      .map((user) => ({
+        fullname: user.fullname,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt,
+      }));
+
+    return sendResponse(res, 200, 'Dashboard stats successfully fetched', {
+      totalMembers,
+      totalSavingPlans,
+      ongoingPlans,
+      completedPlans,
+      totalCollected,
+      newUsers,
+      recentWinners,
+    });
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { getEkubDashboardStats };
+
 module.exports = {
   createEkubInstanceController,
   getEkubMembersController,
   deleteEkubMemberController,
   updateEkubMemberController,
+  getEkubDashboardStats,
 };

@@ -47,24 +47,136 @@ const startSavingPlanController = async (req, res) => {
 };
 
 const getSavingPlansController = async (req, res) => {
+  const { _id: userId } = req.user;
+  const loggerContext = { userId, controller: 'getSavingPlansController' };
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const search = req.query.search || '';
+  const skip = (page - 1) * limit;
+
   try {
-    const savingPlans = await SavingPlan.find({
-      createdBy: req.user._id,
-    }).populate('participants');
-    return sendResponse(
-      res,
-      200,
-      'Saving plans retrieved successfully',
-      savingPlans,
+    // Get total count of saving plans (for pagination)
+    const totalPlans = await SavingPlan.countDocuments({ createdBy: userId });
+    const totalPages = Math.ceil(totalPlans / limit);
+
+    // 1. Fetch saving plans with participants
+    const savingPlans = await SavingPlan.find(
+      { createdBy: userId, name: { $regex: search, $options: 'i' } },
+      { createdBy: 0, ekubId: 0, __v: 0 }, // Exclude unnecessary fields
+    )
+      .populate({
+        path: 'participants',
+        select: '_id fullname email phone', // Only select necessary fields
+      })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Use lean() for better performance since we'll modify the data
+
+    if (!savingPlans.length) {
+      logger.info('No saving plans found for user', loggerContext);
+      return sendResponse(res, 200, 'No saving plans found', []);
+    }
+
+    // 2. Get collected amounts in a single optimized query
+    const savingPlanIds = savingPlans.map((plan) => plan._id);
+    const collectedAggregation = await Payment.aggregate([
+      {
+        $match: {
+          savingPlan: { $in: savingPlanIds },
+          isPaid: true,
+        },
+      },
+      {
+        $group: {
+          _id: '$savingPlan',
+          totalCollected: { $sum: '$amount' },
+          lastPaymentDate: { $max: '$paymentDate' }, // Additional useful metric
+        },
+      },
+    ]);
+
+    // 3. Create a lookup map for collected amounts
+    const collectedMap = collectedAggregation.reduce(
+      (acc, { _id, ...rest }) => {
+        acc[_id.toString()] = rest;
+        return acc;
+      },
+      {},
     );
+
+    // 4. Enrich saving plans with collected data
+    const enrichedPlans = savingPlans.map((plan) => {
+      const planId = plan._id.toString();
+      const collectedData = collectedMap[planId] || {
+        totalCollected: 0,
+        lastPaymentDate: null,
+      };
+
+      const numberOfParticipants = plan.participants.length;
+      const totalAmount =
+        plan.amount * numberOfParticipants * numberOfParticipants;
+
+      // Calculate progress percentage
+      const progressPercentage =
+        totalAmount > 0
+          ? Math.min(100, (collectedData.totalCollected / totalAmount) * 100)
+          : 0;
+
+      return {
+        ...plan,
+        ...collectedData,
+        progressPercentage,
+        isCompleted: progressPercentage >= 100,
+        daysRemaining: calculateDaysRemaining(plan.endDate),
+      };
+    });
+
+    // 5. Sort plans by status (active first) and then by end date
+    enrichedPlans.sort((a, b) => {
+      if (a.isCompleted !== b.isCompleted) {
+        return a.isCompleted ? 1 : -1;
+      }
+      return new Date(a.endDate) - new Date(b.endDate);
+    });
+
+    logger.info(`Successfully retrieved ${enrichedPlans.length} saving plans`, {
+      ...loggerContext,
+      planCount: enrichedPlans.length,
+    });
+
+    return sendResponse(res, 200, 'Saving plans retrieved successfully', {
+      data: enrichedPlans,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: totalPlans,
+        itemsPerPage: limit,
+      },
+    });
   } catch (error) {
-    logger.error(`faild while retriving saving plans: ${error.message}`, {
+    logger.error('Failed to retrieve saving plans', {
+      ...loggerContext,
+      error: error.message,
       stack: error.stack,
     });
-    return sendResponse(res, 500, 'Server error');
+
+    return sendResponse(
+      res,
+      500,
+      'An error occurred while retrieving saving plans',
+      null,
+      { error: error.message },
+    );
   }
 };
 
+// Helper function to calculate days remaining
+function calculateDaysRemaining(endDate) {
+  const now = new Date();
+  const end = new Date(endDate);
+  const diffTime = Math.max(0, end - now); // Prevent negative values
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
 const deleteSavingPlanController = async (req, res) => {
   const { id } = req.params;
   try {
@@ -362,6 +474,71 @@ const getSavingPlanParticipants = async (req, res) => {
   }
 };
 
+const getSavingPlansSummary = async (req, res) => {
+  const { _id: userId } = req.user;
+
+  try {
+    // Get all plans with only required fields
+    const savingPlans = await SavingPlan.find({ createdBy: userId })
+      .select('name amount participants')
+      .lean();
+
+    if (!savingPlans.length) {
+      return sendResponse(res, 200, 'No saving plans found', {
+        totalCollected: 0,
+        completedPlans: 0,
+        highestAmountPlan: null,
+      });
+    }
+
+    const planIds = savingPlans.map((p) => p._id);
+
+    // Get total collected per plan in one aggregate query
+    const collectedPerPlan = await Payment.aggregate([
+      { $match: { savingPlan: { $in: planIds }, isPaid: true } },
+      { $group: { _id: '$savingPlan', total: { $sum: '$amount' } } },
+    ]);
+
+    const collectedMap = new Map(
+      collectedPerPlan.map((item) => [item._id.toString(), item.total]),
+    );
+
+    let totalCollected = 0;
+    let completedPlans = 0;
+    let highestAmountPlan = { name: null, amount: 0 };
+
+    for (const plan of savingPlans) {
+      const collectedAmount = collectedMap.get(plan._id.toString()) || 0;
+      totalCollected += collectedAmount;
+
+      const numParticipants = plan.participants.length;
+      const totalAmount = plan.amount * numParticipants * numParticipants;
+
+      if (collectedAmount >= totalAmount) completedPlans++;
+
+      if (totalAmount > highestAmountPlan.amount) {
+        highestAmountPlan = { name: plan.name, amount: totalAmount };
+      }
+    }
+
+    return sendResponse(
+      res,
+      200,
+      'Saving plans summary retrieved successfully',
+      {
+        totalCollected,
+        completedPlans,
+        highestAmountPlan: highestAmountPlan.name,
+      },
+    );
+  } catch (error) {
+    logger.error(`Failed to retrieve saving plans summary: ${error.message}`, {
+      stack: error.stack,
+    });
+    return sendResponse(res, 500, 'Server error');
+  }
+};
+
 module.exports = {
   startSavingPlanController,
   getSavingPlansController,
@@ -372,4 +549,5 @@ module.exports = {
   getParticipantsExcludingWinner,
   getWinnersController,
   getSavingPlanParticipants,
+  getSavingPlansSummary,
 };
