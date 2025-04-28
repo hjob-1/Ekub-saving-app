@@ -6,6 +6,7 @@ const sendResponse = require('../service/responseUtil');
 const { generatePayments } = require('../service/paymentService');
 const { getEndDate } = require('../util');
 const User = require('../models/User');
+const { sendEmail } = require('../service/emailService');
 
 const startSavingPlanController = async (req, res) => {
   const { name, participants, startDate, amount, ekubId, paymentPlan } =
@@ -539,6 +540,34 @@ const getSavingPlansSummary = async (req, res) => {
   }
 };
 
+const notifyDueDateParticipants = async (req, res) => {
+  try {
+    const savingPlan = await SavingPlan.findById(req.params.id).populate(
+      'participants',
+      'fullname email',
+    ); // Get full user objects
+
+    if (!savingPlan) {
+      return res.status(404).json({ message: 'Saving plan not found' });
+    }
+
+    // Collect all participant emails
+    const emails = savingPlan.participants.map((user) => user.email).join(',');
+
+    // Send one batch email
+    await sendEmail({
+      type: 'contributionReminder',
+      participants: emails,
+      savingPlan: savingPlan.name,
+    });
+
+    res.status(200).json({ message: 'Notifications sent successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to send notifications.' });
+  }
+};
+
 module.exports = {
   startSavingPlanController,
   getSavingPlansController,
@@ -550,4 +579,5 @@ module.exports = {
   getWinnersController,
   getSavingPlanParticipants,
   getSavingPlansSummary,
+  notifyDueDateParticipants,
 };

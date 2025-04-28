@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
 import { GiPayMoney } from 'react-icons/gi';
 import { notify } from '../../util/notify';
@@ -13,6 +13,7 @@ const Login = () => {
     password: '',
   });
   const appContext = useContext(AppContext);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,6 +26,7 @@ const Login = () => {
     if (response.status === 1) {
       appContext.setUserData(response.payload.userData);
       appContext.setSession(response.payload.token);
+      navigate('/user/', { replace: true });
     }
     notify(response);
   };

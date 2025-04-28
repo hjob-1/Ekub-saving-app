@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router';
 import AppLayout from '../pages/app/layout';
 import ProtectedRoute from './protectedRoute';
 import routes from './routeConfig';
+import ErrorPage from '../pages/app/ErrorPage';
 const AppRoutes = () => {
   return (
     <Routes>
@@ -20,7 +21,7 @@ const AppRoutes = () => {
           }
         />
       ))}
-      <Route path="*" element={<Navigate to="/user/login" replace />} />
+      <Route path="*" element={<ErrorPage />} />
     </Routes>
   );
 };

@@ -1,17 +1,18 @@
 import { FaEnvelope, FaPhone, FaUser } from 'react-icons/fa';
 
-const UserForm = ({ user, isEditing, onChange, onSubmit }) => {
+const UserForm = ({ user = {}, onChange, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit();
   };
 
   return (
-    <div className="bg-white rounded-xl  p-8 w-full max-w-sm shadow-[0px_3px_35px_rgba(0,0,0,0.01),0px_3px_25px_rgba(0,0,0,0.08)]">
-      <form className="space-y-4">
-        <h2 className="text-lg font-semibold mb-4 text-center">
-          Manage Ekub Member
+    <div className="bg-white rounded-xl p-8 w-full max-w-sm shadow-[0px_3px_35px_rgba(0,0,0,0.01),0px_3px_25px_rgba(0,0,0,0.08)]">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <h2 className="text-xl font-bold mb-4 text-center">
+          {user?._id ? 'Edit Member' : 'Add New Member'}
         </h2>
+
         <div className="relative">
           <FaUser className="absolute left-3 top-3 text-gray-400" />
           <input
@@ -21,10 +22,11 @@ const UserForm = ({ user, isEditing, onChange, onSubmit }) => {
             name="fullname"
             placeholder="Full name"
             required
-            value={user.fullname}
-            onChange={(e) => onChange({ ...user, fullname: e.target.value })}
+            value={user?.fullname ?? ''}
+            onChange={(e) => onChange('fullname', e.target.value)}
           />
         </div>
+
         <div className="relative">
           <FaEnvelope className="absolute left-3 top-3 text-gray-400" />
           <input
@@ -34,10 +36,11 @@ const UserForm = ({ user, isEditing, onChange, onSubmit }) => {
             name="email"
             placeholder="Email address"
             required
-            value={user.email}
-            onChange={(e) => onChange({ ...user, email: e.target.value })}
+            value={user?.email ?? ''}
+            onChange={(e) => onChange('email', e.target.value)}
           />
         </div>
+
         <div className="relative">
           <FaPhone className="absolute left-3 top-3 text-gray-400" />
           <input
@@ -47,17 +50,17 @@ const UserForm = ({ user, isEditing, onChange, onSubmit }) => {
             name="phone"
             placeholder="Phone"
             required
-            value={user.phone}
-            onChange={(e) => onChange({ ...user, phone: e.target.value })}
+            value={user?.phone ?? ''}
+            onChange={(e) => onChange('phone', e.target.value)}
           />
         </div>
+
         <div>
           <button
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             type="submit"
-            onClick={handleSubmit}
           >
-            {isEditing ? 'Update User' : 'Add User'}
+            {user?._id ? 'Update User' : 'Add User'}
           </button>
         </div>
       </form>

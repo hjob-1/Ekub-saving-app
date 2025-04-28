@@ -9,7 +9,12 @@ const {
 } = require('../service/ekubService');
 const logger = require('../service/logger');
 const sendResponse = require('../service/responseUtil');
-const { registerUser, updateUserInfo } = require('../service/userService');
+const {
+  registerUser,
+  updateUserInfo,
+  generateToken,
+} = require('../service/userService');
+const { sendEmail } = require('../service/emailService');
 
 // Create an instance of an ekub
 
@@ -18,6 +23,16 @@ const createEkubInstanceController = async (req, res) => {
 
   try {
     const registerEquibOwner = await registerUser(req.body);
+    if (registerEquibOwner.role === 'admin') {
+      // send email to user
+      const activationToken = generateToken(registerEquibOwner.email);
+      // send email to user
+      await sendEmail({
+        type: 'activate',
+        activationToken,
+        user: registerEquibOwner,
+      });
+    }
     const ekub = await createEkubWithAdmin({
       admin: registerEquibOwner._id,
       createdBy: req.user._id,
@@ -35,34 +50,68 @@ const createEkubInstanceController = async (req, res) => {
 };
 
 // Get all members of an ekub
+// Get all members of an ekub, with pagination & optional search
 const getEkubMembersController = async (req, res) => {
   const admin = req.user;
-  const { query } = req.query;
+  const { search = '', page = '1', limit = '10' } = req.query;
+  const pageNum = parseInt(page, 10);
+  const perPage = parseInt(limit, 10);
+  const skip = (pageNum - 1) * perPage;
+
   try {
+    // 1) find ekub for this admin
     const ekub = await Ekub.findOne({ admin: admin._id });
     if (!ekub) {
       return sendResponse(res, 400, 'Ekub not found');
     }
-    const searchFilter = query
+
+    // 2) build filter: only members of this ekub, plus optional text search
+    const baseFilter = { _id: { $in: ekub.members } };
+    const searchFilter = search
       ? {
-          _id: { $in: ekub.members },
+          ...baseFilter,
           $or: [
-            { email: { $regex: query, $options: 'i' } },
-            { fullName: { $regex: query, $options: 'i' } }, // or `name`
+            { email: { $regex: search, $options: 'i' } },
+            { fullname: { $regex: search, $options: 'i' } },
           ],
         }
-      : { _id: { $in: ekub.members } };
+      : baseFilter;
 
-    const users = await User.find(searchFilter).select(
-      '_id email fullname phone',
-    );
-    if (!users) {
-      return sendResponse(res, 400, 'No members found');
+    // 3) run count + paged find in parallel
+    const [totalItems, participants] = await Promise.all([
+      User.countDocuments(searchFilter),
+      User.find(searchFilter)
+        .skip(skip)
+        .limit(perPage)
+        .select('_id email fullname phone')
+        .lean(),
+    ]);
+
+    // 4) if no members at all
+    if (participants.length === 0) {
+      return sendResponse(res, 200, 'No members found', {
+        data: [],
+        pagination: {
+          currentPage: pageNum,
+          totalPages: 0,
+          totalItems: 0,
+          itemsPerPage: perPage,
+        },
+      });
     }
 
-    return sendResponse(res, 200, 'Members retrieved successfully', users);
+    // 5) successful response with pagination meta
+    return sendResponse(res, 200, 'Members retrieved successfully', {
+      data: participants,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(totalItems / perPage),
+        totalItems,
+        itemsPerPage: perPage,
+      },
+    });
   } catch (error) {
-    logger.error(`faild while retriving ekub instance: ${error.message}`, {
+    logger.error(`Failed retrieving ekub members: ${error.message}`, {
       stack: error.stack,
     });
     return sendResponse(res, 500, 'Server error');
@@ -209,7 +258,36 @@ const getEkubDashboardStats = async (req, res) => {
   }
 };
 
-module.exports = { getEkubDashboardStats };
+async function getEkubMemberStats(req, res) {
+  const adminId = req.user._id;
+
+  try {
+    // 1) find ekub for this admin
+    const ekub = await Ekub.findOne({ admin: adminId }).lean();
+    if (!ekub) {
+      return sendResponse(res, 404, 'Ekub not found');
+    }
+
+    const memberIds = ekub.members || [];
+    const totalMembers = memberIds.length;
+
+    // 2) count new members in last 7 days
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const newThisWeek = await User.countDocuments({
+      _id: { $in: memberIds },
+      createdAt: { $gte: oneWeekAgo },
+    });
+
+    // 3) return simplified stats
+    return sendResponse(res, 200, 'Member stats retrieved', {
+      totalMembers,
+      newThisWeek,
+    });
+  } catch (err) {
+    console.error('Error in getEkubMemberStats:', err);
+    return sendResponse(res, 500, 'Server error retrieving stats');
+  }
+}
 
 module.exports = {
   createEkubInstanceController,
@@ -217,4 +295,5 @@ module.exports = {
   deleteEkubMemberController,
   updateEkubMemberController,
   getEkubDashboardStats,
+  getEkubMemberStats,
 };

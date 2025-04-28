@@ -1,4 +1,5 @@
 import React from 'react';
+import EmailReminderButton from './EmailReminderButton';
 const defaultTabs = [
   { key: 'payment', label: 'Payment List' },
   { key: 'winners', label: 'Winners' },

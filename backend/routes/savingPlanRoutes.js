@@ -11,6 +11,7 @@ const {
   getSavingPlanParticipants,
   getDashboardStatsController,
   getSavingPlansSummary,
+  notifyDueDateParticipants,
 } = require('../controllers/savingPlanController');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const { conductLottery } = require('../service/paymentService');
@@ -100,4 +101,9 @@ router.get(
   getSavingPlansSummary,
 );
 
+router.get(
+  '/:id/send-reminder',
+  roleMiddleware('admin'),
+  notifyDueDateParticipants,
+);
 module.exports = router;

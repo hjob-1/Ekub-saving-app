@@ -1,102 +1,175 @@
-// import { dummyPlans } from '../constants/dummyPlans';
-import { FiUsers, FiTrendingUp, FiCalendar } from 'react-icons/fi';
+import {
+  FiUsers,
+  FiTrendingUp,
+  FiCalendar,
+  FiSearch,
+  FiPlus,
+  FiAward,
+  FiCheckCircle,
+  FiDollarSign,
+  FiArrowDown,
+} from 'react-icons/fi';
 import PerformanceCard from '../../components/PerformanceCard';
 import PlanCard from '../../components/PlanTable';
 import CreateSavingPlanForm from '../../components/CreateSavingPlan';
 import { notify } from '../../util/notify';
-import { createSavingPlanApi, getSavingPlansApi } from '../../util/ApiUtil';
+import { createSavingPlanApi } from '../../util/ApiUtil';
 import { useToken } from '../../context/getToken';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import Pagination from '../../components/Pagination';
+import Breadcrumb from '../../components/Breadcrumb';
+import PageHeader from '../../components/header';
+import { useSavingPlans } from './hooks/useSavingPlan';
+import LoadingSpinner from '../../components/Spinner';
+import SavingPlanStats from '../../components/savingPlan/SavingPlanStats';
+import ErrorState from '../../components/ErrorState';
 
 export default function SavingPlans() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [savingPlans, setSavingPlans] = useState([]);
   const token = useToken();
+  const {
+    savingPlans,
+    pagination,
+    loading,
+    error,
+    searchTerm,
+    handleSearch,
+    setCurrentPage,
+    refresh,
+    savingPlansStats,
+  } = useSavingPlans(token);
+
   const createSavingPlan = async (planData) => {
     try {
       const response = await createSavingPlanApi(token, planData);
       if (response.status === 1) {
         setIsModalOpen(false);
         notify(response);
+        refresh();
       }
     } catch (error) {
       notify(error);
       console.error('Failed to create saving plan:', error);
     }
   };
+  if (loading) {
+    return <LoadingSpinner message="Loading ..." />;
+  }
+  if (error) {
+    return <ErrorState error={error} />;
+  }
 
-  const fetchSavingPlans = async () => {
-    try {
-      const response = await getSavingPlansApi(token);
-      if (response.status === 1) {
-        setSavingPlans(response.payload.data);
-      }
-    } catch (error) {
-      notify(error);
-      console.error('Failed to fetch saving plans:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchSavingPlans();
-  }, []);
-  console.log('savingplans', savingPlans);
   return (
-    <div className="p-3 w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl flex-1 sm:text-2xl font-bold text-purple-800">
-          Saving Plans Management
-        </h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-purple-600 text-white  p-1 sm:px-4 sm:py-2 rounded hover:bg-purple-700"
-        >
-          Add Plan
-        </button>
-      </div>
-
-      <input
-        type="text"
-        placeholder="Search plans..."
-        className="p-2 border border-gray-300 rounded w-full"
+    <div className="p-4 w-full">
+      <Breadcrumb
+        items={[
+          { label: 'Dashboard', href: '/user/' },
+          { label: 'Saving plans' },
+        ]}
       />
+      {/* Header and Actions */}
+      <PageHeader
+        title="Saving Plans overview"
+        subtitle="Manage your saving plans and track performance"
+      >
+        <div className="flex gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search plans..."
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2"
+          >
+            <FiPlus /> Add Plan
+          </button>
+        </div>
+      </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-        {savingPlans.map((plan) => (
-          <PlanCard key={plan.id} plan={plan} />
-        ))}
+      {/* Performance Overview Cards */}
+      <SavingPlanStats stats={savingPlansStats} />
+
+      {/* Enhanced Section Transition */}
+      <div className="mt-12 mb-8 relative">
+        {/* Decorative line with fade effect */}
+        <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-purple-200 to-transparent"></div>
+
+        {/* Content container with subtle background */}
+        <div className="relative flex flex-col items-start bg-purple-50/30 rounded-lg p-4 pl-6 border border-purple-100 max-w-3xl">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <FiUsers className="text-purple-600 text-xl" />
+            </div>
+            <h2 className="text-xl font-semibold text-purple-900">
+              {savingPlans.length > 0
+                ? `Your Saving Plans `
+                : 'Start Your First Saving Plan'}
+            </h2>
+          </div>
+
+          <p className="text-gray-600 pl-1">
+            {savingPlans.length > 0 ? (
+              <>
+                Track progress, manage contributions, and view upcoming payouts.
+                <span className="block mt-1 text-sm text-purple-600 flex items-center gap-1">
+                  <FiArrowDown className="animate-bounce" /> Scroll to explore
+                </span>
+              </>
+            ) : (
+              "You haven't created any saving plans yet. Get started by clicking the button below."
+            )}
+          </p>
+
+          {savingPlans.length === 0 && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="mt-3 ml-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-all"
+            >
+              <FiPlus /> Create Plan
+            </button>
+          )}
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-        <PerformanceCard
-          icon={<FiTrendingUp />}
-          value="$45,600"
-          label="Total Savings"
-          subtext="Across all plans"
-        />
-        <PerformanceCard
-          icon={<FiUsers />}
-          value="41"
-          label="Total Members"
-          subtext="Participating"
-        />
-        <PerformanceCard
-          icon={<FiCalendar />}
-          value="May 15"
-          label="Next Payout"
-          subtext="Monthly Plan"
-        />
-      </div>
+
+      {/* Plans Grid */}
+      {savingPlans.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {savingPlans.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                onUpdate={refresh} // Refresh after any updates
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="mt-8">
+            <Pagination
+              {...pagination}
+              onPageChange={setCurrentPage}
+              label="saving plans"
+            />
+          </div>
+        </>
+      )}
+      {/* Create Plan Modal */}
       {isModalOpen && (
         <div
-          onClick={(e) => {
-            // Only close if clicking directly on backdrop (not children)
-            if (e.target === e.currentTarget) {
-              setIsModalOpen(false);
-            }
-          }}
-          className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50"
+          onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}
+          className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4"
         >
-          <CreateSavingPlanForm createSavingPlan={createSavingPlan} />
+          <CreateSavingPlanForm
+            createSavingPlan={createSavingPlan}
+            onClose={() => setIsModalOpen(false)}
+          />
         </div>
       )}
     </div>
