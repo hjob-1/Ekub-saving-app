@@ -81,9 +81,8 @@ const updateUserController = async (req, res) => {
 
 const activateAccountController = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Extract token after 'Bearer'
-
+    const auth = req.headers.authorization;
+    const token = auth.split(' ')[1];
     if (!token) return sendResponse(res, 401, 'access denied');
     await activateAccount(token);
 

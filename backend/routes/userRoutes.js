@@ -7,6 +7,7 @@ const {
   forgotPasswordController,
   resetPasswordController,
 } = require('../controllers/userController');
+const roleMiddleware = require('../middleware/roleMiddleware');
 const router = exprees.Router();
 
 router.get('/', (req, res) => {
@@ -19,5 +20,11 @@ router.put('/:id', updateUserController);
 router.get('/activate-account', activateAccountController);
 router.post('/forgot-password', forgotPasswordController);
 router.post('/reset-password', resetPasswordController);
+router.get('/get', roleMiddleware('admin'), (req, res) => {
+  res.status(200).json({
+    message: 'user found',
+    user: req.user,
+  });
+});
 
 module.exports = router;

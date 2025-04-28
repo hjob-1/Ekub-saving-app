@@ -1,62 +1,141 @@
 import { Link } from 'react-router';
+import {
+  FiUsers,
+  FiDollarSign,
+  FiCalendar,
+  FiClock,
+  FiArrowRight,
+} from 'react-icons/fi';
+import Avator from './Avator';
 
 const PlanCard = ({ plan }) => {
-  const visibleMembers = plan.participants.slice(0, 3);
-  const remaining = plan.participants.length - visibleMembers.length;
-
-  const getStatusColor = () => {
-    if (plan.startDate === plan.endDate) {
-      return 'bg-green-100 text-green-700';
-    } else {
-      return 'bg-blue-100 text-blue-700';
-    }
-  };
+  const targetAmount = plan.amount * plan.participants.length ** 2;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition">
-      <div className="flex justify-between items-start mb-3">
-        <h2 className="text-xl font-bold text-purple-800">
-          <Link to={`/user/saving-plan/${plan._id}`}>{plan.name}</Link>
-        </h2>
-        <div className="flex gap-2">
+    <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 hover:border-purple-100">
+      {/* Header with status */}
+      <div className="flex justify-between items-start mb-4">
+        <div>
           <span
-            className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor()}`}
+            className={`text-xs px-2 py-1 rounded-full font-medium ${
+              plan.isCompleted
+                ? 'bg-green-100 text-green-700'
+                : 'bg-blue-100 text-blue-700'
+            }`}
           >
-            {plan.startDate === plan.endDate ? 'Completed' : 'Ongoing'}
+            {plan.isCompleted
+              ? 'Completed'
+              : plan.daysRemaining > 0
+              ? `${plan.daysRemaining} days left`
+              : 'Ended'}
           </span>
-          {/* <DropdownMenu /> */}
+        </div>
+        {/* Add dropdown menu here if needed */}
+      </div>
+
+      {/* Plan title as link */}
+      <Link to={`/user/saving-plan/${plan._id}`} className="block mb-3 group">
+        <h2 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">
+          {plan.name}
+        </h2>
+      </Link>
+
+      {/* Key metrics */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="flex items-center">
+          <FiDollarSign className="text-gray-400 mr-2" />
+          <div>
+            <p className="text-xs text-gray-500">Target</p>
+            <p className="text-sm font-semibold">
+              ${targetAmount?.toLocaleString() || '0'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <FiDollarSign className="text-gray-400 mr-2" />
+          <div>
+            <p className="text-xs text-gray-500">Saved</p>
+            <p className="text-sm font-semibold">
+              ${plan.totalCollected?.toLocaleString() || '0'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <FiCalendar className="text-gray-400 mr-2" />
+          <div>
+            <p className="text-xs text-gray-500">Cycle</p>
+            <p className="text-sm font-semibold capitalize">
+              {plan.paymentPlan}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <FiUsers className="text-gray-400 mr-2" />
+          <div>
+            <p className="text-xs text-gray-500">Members</p>
+            <p className="text-sm font-semibold">
+              {plan.participants?.length || 0}
+            </p>
+          </div>
         </div>
       </div>
 
-      <p className="text-sm font-bold text-gray-500 capitalize">
-        {plan.paymentPlan} • ${plan.amount}/cycle
-      </p>
+      {/* Progress bar */}
+      <div className="mb-4">
+        <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <span>{plan.progressPercentage.toFixed(0)}% completed</span>
+          <span>
+            ${plan.totalCollected?.toLocaleString()} of $
+            {targetAmount?.toLocaleString()}
+          </span>
+        </div>
+        <ProgressBar progress={plan.progressPercentage} />
+      </div>
 
-      <p className="text-xs text-gray-400 mb-3">
-        Duration: {new Date(plan.startDate).toLocaleDateString()} →{' '}
-        {new Date(plan.endDate).toLocaleDateString()}
-      </p>
+      {/* Timeline */}
+      <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+        <div>
+          <FiClock className="inline mr-1" />
+          <span>{new Date(plan.startDate).toLocaleDateString()}</span>
+        </div>
+        <FiArrowRight className="text-gray-300 mx-2" />
+        <div>
+          <span>{new Date(plan.endDate).toLocaleDateString()}</span>
+        </div>
+      </div>
 
+      {/* Participants avatars with better hover effect */}
       <div className="flex items-center">
-        {visibleMembers.map((m, i) => (
-          <img
-            key={i}
-            src="https://i.pravatar.cc/150?img=5"
-            alt="avatar"
-            className={`w-8 h-8 rounded-full border-2 border-white -ml-2 ${
-              i === 0 ? 'ml-0' : ''
-            }`}
-          />
-        ))}
-
-        {remaining > 0 && (
-          <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-600 text-xs font-medium flex items-center justify-center -ml-2">
-            +{remaining}
-          </div>
+        <div className="flex -space-x-2">
+          {plan.participants?.slice(0, 5).map((participant, index) => (
+            <Avator fullname={participant.fullname} key={index} />
+          ))}
+        </div>
+        {plan.participants?.length > 5 && (
+          <span className="ml-2 text-xs text-gray-500">
+            +{plan.participants.length - 5} more
+          </span>
         )}
       </div>
+
+      {/* CTA Button */}
+      <Link
+        to={`/user/saving-plan/${plan._id}`}
+        className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+      >
+        View Plan Details
+      </Link>
     </div>
   );
 };
+
+const ProgressBar = ({ progress }) => (
+  <div className="w-full bg-gray-200 rounded-full h-2">
+    <div
+      className="bg-purple-600 h-2 rounded-full"
+      style={{ width: `${progress}%` }}
+    ></div>
+  </div>
+);
 
 export default PlanCard;

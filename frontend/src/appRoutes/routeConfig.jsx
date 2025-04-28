@@ -8,6 +8,7 @@ import ResetPassword from '../pages/public/ResetPassword';
 import UserManagement from '../pages/app/addMember/member';
 import SavingPlans from '../pages/app/SavingPlan';
 import SavingPlanDetailPage from '../pages/app/SavingPlanDetailPage';
+import Dashboard from '../pages/app/dashboard';
 
 const routes = [
   {
@@ -21,8 +22,13 @@ const routes = [
     protected: true,
   },
   {
-    path: '/user/saving-plan',
+    path: '/user/saving-plans',
     element: <SavingPlans />,
+    protected: true,
+  },
+  {
+    path: '/user/',
+    element: <Dashboard />,
     protected: true,
   },
   {
@@ -38,7 +44,7 @@ const routes = [
     element: <VerifyEmail />,
   },
   {
-    path: 'user/forgot-password',
+    path: '/user/forgot-password',
     element: <ForgotPassword />,
   },
   {

@@ -57,8 +57,28 @@ const getPasswordResetTemplate = (user, resetToken) => {
   };
 };
 
+const getContributionReminderTemplate = (participants, savingPlan) => {
+  return {
+    from: `"Ekub App" ${process.env.GMAIL_USER}`, // Sender's email address
+    bcc: participants, // Better privacy (optional)
+    subject: `Ekub - Reminder to Contribute for ${savingPlan}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2>Contribution Reminder for ${savingPlan}</h2>
+        <p>Hi,</p>
+        <p>This is a reminder to complete your contribution for the Ekub plan: <strong>${savingPlan}</strong>.</p>
+        <p>Please ensure you make your contribution before the deadline to stay eligible for the lottery draws!</p>
+        <p>If you have already made your payment, please disregard this message.</p>
+        <p>Thank you for being a part of our Ekub community!</p>
+        <p>Best regards,<br>Ekub Team</p>
+      </div>
+    `,
+  };
+};
+
 module.exports = {
   getEmailActivateTemplate,
   getLotteryAnnouncementTemplate,
   getPasswordResetTemplate,
+  getContributionReminderTemplate,
 };

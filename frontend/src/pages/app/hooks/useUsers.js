@@ -1,78 +1,141 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import {
   deleteEkubMember,
   getEkubMembers,
+  getEkubMemberStatsApi,
   registerUserToEkubApi,
   updateEkubMember,
 } from '../../../util/ApiUtil';
 import { notify } from '../../../util/notify';
+import { usePaginatedData } from './usePaginatedData';
 
-export const useUsers = (token) => {
-  const [users, setUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+/**
+ * Hook for managing Ekub members with pagination, search, and CRUD operations.
+ * @param {string} token - Auth token
+ * @param {number} initialLimit - Items per page
+ */
+export const useUsers = (token, initialLimit = 10) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  const [memberStats, setMemberStats] = useState({});
 
-  const fetchEkubMembers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await getEkubMembers(token);
-      if (response.status === 1) {
-        setUsers(response.payload.data);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
-
-  const addUser = async (newUser) => {
-    try {
-      const response = await registerUserToEkubApi(
-        newUser.fullname,
-        newUser.email,
-        newUser.phone,
-        '123',
-        token,
-      );
-
-      if (response.status == 1) {
-        notify(response);
-        fetchEkubMembers();
-      }
-    } catch (error) {
-      console.error('Failed to add user:', error);
-    }
-  };
-
-  const editUser = async (updatedUser) => {
-    try {
-      const response = await updateEkubMember(
-        token,
-        updatedUser._id,
-        updatedUser,
-      );
-      if (response.status == 1) {
-        notify(response);
-        fetchEkubMembers();
-      }
-    } catch (error) {
-      console.error('Failed to edit user:', error);
-    }
-  };
-
-  const deleteUser = async (id) => {
-    try {
-      const response = await deleteEkubMember(token, id);
-      if (response.status == 1) {
-        notify(response);
-        fetchEkubMembers();
-      }
-    } catch (error) {
-      console.error('Failed to delete user:', error);
-    }
-  };
+  // Debounce search term to avoid rapid API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
-    fetchEkubMembers();
-  }, [fetchEkubMembers]);
+    const fetchMemberStats = async () => {
+      try {
+        const res = await getEkubMemberStatsApi(token);
+        if (res.status === 1) {
+          setMemberStats(res.payload.data);
+          console.log(res.payload.data);
+        }
+      } catch (e) {
+        console.error('Fetch member stats failed', e);
+      }
+    };
+    fetchMemberStats();
+  }, [token]);
+  // Data fetcher receives page number
+  const fetchMembers = useCallback(
+    (page) =>
+      getEkubMembers(token, {
+        page,
+        limit: initialLimit,
+        search: debouncedSearch,
+      }),
+    [token, initialLimit, debouncedSearch],
+  );
 
-  return { users, isLoading, fetchEkubMembers, addUser, editUser, deleteUser };
+  // usePaginatedData handles calling fetcher and managing pagination state
+  const {
+    data: users,
+    pagination,
+    loading: isLoading,
+    error,
+    fetchPage,
+    setPage,
+  } = usePaginatedData(fetchMembers, [token, debouncedSearch]);
+
+  // CRUD operations re-fetch current page on success
+  const addUser = useCallback(
+    async (newUser) => {
+      try {
+        const res = await registerUserToEkubApi(
+          newUser.fullname,
+          newUser.email,
+          newUser.phone,
+          '123',
+          token,
+        );
+        if (res.status === 1) {
+          notify(res);
+          fetchPage(pagination.currentPage);
+        }
+      } catch (e) {
+        console.error('Add user failed', e);
+      }
+    },
+    [token, fetchPage, pagination.currentPage],
+  );
+
+  const editUser = useCallback(
+    async (upd) => {
+      try {
+        const res = await updateEkubMember(token, upd._id, upd);
+        if (res.status === 1) {
+          notify(res);
+          fetchPage(pagination.currentPage);
+        }
+      } catch (e) {
+        console.error('Edit user failed', e);
+      }
+    },
+    [token, fetchPage, pagination.currentPage],
+  );
+
+  const deleteUser = useCallback(
+    async (id) => {
+      try {
+        const res = await deleteEkubMember(token, id);
+        if (res.status === 1) {
+          notify(res);
+          // If deleting last item on page, go back one page if needed
+          const nextPage =
+            users.length === 1 && pagination.currentPage > 1
+              ? pagination.currentPage - 1
+              : pagination.currentPage;
+          fetchPage(nextPage);
+          setPage(nextPage);
+        }
+      } catch (e) {
+        console.error('Delete user failed', e);
+      }
+    },
+    [token, fetchPage, pagination.currentPage, users.length, setPage],
+  );
+
+  // Initial load & refresh when token or search changes
+  useEffect(() => {
+    setPage(1);
+    fetchPage(1);
+  }, [token, debouncedSearch]);
+
+  return {
+    users,
+    pagination,
+    isLoading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    fetchPage,
+    addUser,
+    editUser,
+    deleteUser,
+    memberStats,
+    setCurrentPage: setPage,
+  };
 };

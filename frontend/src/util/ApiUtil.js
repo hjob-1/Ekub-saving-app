@@ -18,6 +18,25 @@ const frameResponse = (
   return { status: reqStatus, payload: reqPayload };
 };
 
+export const sessionApi = async (token) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/users/get`;
+    const apiResponse = await axios.get(url, {
+      headers: { Authorization: frameToken(token) },
+    });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data.message);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
 export const registerApi = async (fullname, email, phone, password) => {
   let response = frameResponse();
   try {
@@ -27,7 +46,6 @@ export const registerApi = async (fullname, email, phone, password) => {
       email,
       phone,
       password,
-      role: 'admin',
     });
     if (apiResponse.status === 201) {
       response = frameResponse(1, apiResponse.data);
@@ -157,9 +175,9 @@ export const registerUserToEkubApi = async (
 export const getEkubMembers = async (token, query) => {
   let response = frameResponse();
   try {
-    const url = `${API_BASE_URL}/ekubs/ekub-members${
-      query ? '?query=' + query : ''
-    }`;
+    const url = `${API_BASE_URL}/ekubs/ekub-members?page=${query.page}&limit=${
+      query.limit
+    }&search=${encodeURIComponent(query.search)}`;
     const apiResponse = await axios.get(url, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);
@@ -223,10 +241,17 @@ export const createSavingPlanApi = async (token, data) => {
   return response;
 };
 
-export const getSavingPlansApi = async (token, query) => {
+export const getSavingPlansApi = async (
+  token,
+  page = 1,
+  limit = 6,
+  search = '',
+) => {
   let response = frameResponse();
   try {
-    const url = `${API_BASE_URL}/ekubs/saving-plans?query=${query}`;
+    const url = `${API_BASE_URL}/ekubs/saving-plans?page=${page}&limit=${limit}&search=${encodeURIComponent(
+      search,
+    )}`;
     const apiResponse = await axios.get(url, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);
@@ -327,6 +352,74 @@ export const getSavingPlanWinnersApi = async (
   let response = frameResponse();
   try {
     const url = `${API_BASE_URL}/ekubs/saving-plans/${id}/winners?page=${page}&limit=${limit}`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const getDashboardStatsApi = async (token) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/dashboard-stats`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const getSavingPlansStatsApi = async (token) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/saving-plans/stats`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const getEkubMemberStatsApi = async (token) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/ekub-members/stats`;
+    const apiResponse = await axios.get(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
+
+export const sendReminderApi = async (token, id) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/saving-plans/${id}/send-reminder`;
     const apiResponse = await axios.get(url, { ...authHeader(token) });
     if (apiResponse.status === 200) {
       response = frameResponse(1, apiResponse.data);

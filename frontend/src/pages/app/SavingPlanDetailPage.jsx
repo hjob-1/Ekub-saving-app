@@ -4,7 +4,7 @@ import PageHeader from '../../components/header';
 import TabPanel from '../../components/TabPanel';
 import { useToken } from '../../context/getToken';
 
-import { useSavingPlan } from './hooks/useSavingPlan';
+import { useDetailSavingPlan } from './hooks/useSavingPlan';
 import StatsCards from '../../components/savingPlan/StatsCards';
 import PaymentList from '../../components/savingPlan/PaymentList';
 import Pagination from '../../components/Pagination';
@@ -14,6 +14,9 @@ import Modal from '../../components/Modal';
 import { useParams } from 'react-router';
 import WinnerList from '../../components/savingPlan/WinnerList';
 import { useSavingPlanWinners } from './hooks/useWinner';
+import EmailReminderButton from '../../components/EmailReminderButton';
+import { FiAlertCircle } from 'react-icons/fi';
+import { sendReminderApi } from '../../util/ApiUtil';
 
 const SavingPlanDetailPage = () => {
   const token = useToken();
@@ -30,13 +33,26 @@ const SavingPlanDetailPage = () => {
     setCurrentPage,
     loading: paymentLoading,
     error: paymentError,
-  } = useSavingPlan(token, savingId, limit);
+  } = useDetailSavingPlan(token, savingId, limit);
 
   const { winners, loading, error, pagination, setPage } = useSavingPlanWinners(
     token,
     savingId,
     limit,
   );
+
+  const sendReminderEmail = async () => {
+    try {
+      const response = await sendReminderApi(token, savingId);
+      if (response.status === 1) {
+        console.log('Email sent successfully!');
+      } else {
+        console.error('Failed to send email:', response.message);
+      }
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
+  };
 
   const tabComponent = {
     payment: (
@@ -70,8 +86,8 @@ const SavingPlanDetailPage = () => {
       <Breadcrumb
         items={[
           { label: 'Dashboard' },
-          { label: 'Saving plans' },
-          { label: 'Weekly Plan' },
+          { label: 'Saving plans', href: '/user/saving-plans' },
+          { label: savingPlanStats?.name || '' },
         ]}
       />
       <PageHeader
@@ -103,7 +119,28 @@ const SavingPlanDetailPage = () => {
         </div>
       )}
 
+      {/* Email Reminder Section */}
+      <div className="bg-blue-50 p-5 rounded-lg mb-8 border border-blue-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-medium text-blue-800 flex items-center gap-2 mb-1">
+              <FiAlertCircle className="text-blue-500" />
+              Upcoming Due Date Notification
+            </h3>
+            <p className="text-sm text-blue-600">
+              Send email reminders to all members about the approaching
+              deadline.
+            </p>
+          </div>
+          <EmailReminderButton
+            onSendEmail={sendReminderEmail}
+            className="flex-shrink-0"
+          />
+        </div>
+      </div>
+
       <TabPanel tab={tab} setTab={setTab} />
+
       {tabComponent[tab] || (
         <div className="text-center">No data available</div>
       )}

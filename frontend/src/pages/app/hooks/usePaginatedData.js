@@ -20,10 +20,11 @@ export const usePaginatedData = (apiFn, deps = [], initialPage = 1) => {
       if (res?.status === 1 && res?.payload) {
         const { data, pagination: pg } = res.payload.data;
 
+        console.log(res.payload);
         setData(data || []);
         setPagination(pg || pagination);
       } else {
-        throw new Error(res?.message || 'Failed to fetch data');
+        throw new Error(res?.payload?.message || 'Failed to fetch data');
       }
     } catch (err) {
       console.error('Pagination Error:', err);

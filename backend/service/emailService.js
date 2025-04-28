@@ -3,6 +3,7 @@ const {
   getEmailActivateTemplate,
   getPasswordResetTemplate,
   getLotteryAnnouncementTemplate,
+  getContributionReminderTemplate,
 } = require('./template');
 
 // Create a transporter object
@@ -27,6 +28,11 @@ const getEmailTemplate = (emailInfo) => {
       return getLotteryAnnouncementTemplate(
         emailInfo.winner,
         emailInfo.participants,
+      );
+    case 'contributionReminder':
+      return getContributionReminderTemplate(
+        emailInfo.participants,
+        emailInfo.savingPlan,
       );
     default:
       throw new Error('Unknown email type.');

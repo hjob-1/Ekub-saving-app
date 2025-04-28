@@ -28,9 +28,14 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
     const fetchUsers = async () => {
       if (userQuery.trim() === '') return;
       try {
-        const res = await getEkubMembers(token, userQuery);
+        const res = await getEkubMembers(token, {
+          search: userQuery,
+          limit: 5,
+          page: 1,
+        });
         if (res.status === 1) {
-          setUserSuggestions(res.payload.data);
+          console.log("'Fetched users:", res.payload.data);
+          setUserSuggestions(res.payload.data.data);
         }
       } catch (err) {
         console.error('Error fetching users', err);

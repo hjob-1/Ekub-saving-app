@@ -5,3 +5,12 @@ export const formateSavingPlan = (savingPlan) => {
     participants: participantIds,
   };
 };
+
+export const formateDate = (date) => {
+  const dateString = new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  return dateString;
+};
