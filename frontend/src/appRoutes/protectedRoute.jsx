@@ -3,6 +3,7 @@ import { AppContext } from '../context/applicationContext';
 import { useNavigate } from 'react-router';
 import { sessionApi } from '../util/ApiUtil';
 
+// protected route component to check if the user is logged in
 const ProtectedRoute = ({ children }) => {
   const appContext = useContext(AppContext);
   const token = appContext.getSession();
