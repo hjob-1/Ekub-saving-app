@@ -1,16 +1,24 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router';
 import Footer from '../../components/Footer';
 import { GiPayMoney } from 'react-icons/gi';
 import { AppContext } from '../../context/applicationContext';
 import Avator from '../../components/Avator';
+import useAuth from '../../context/useAuth';
 
 function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const appContext = useContext(AppContext);
   const navigate = useNavigate();
+  const { isAuthorized } = useAuth(appContext.getUserData());
+
+  useEffect(() => {
+    if (!isAuthorized) {
+      return navigate('/user/unauthorized');
+    }
+  }, [isAuthorized]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleAvatarMenu = () => setAvatarMenuOpen(!avatarMenuOpen);

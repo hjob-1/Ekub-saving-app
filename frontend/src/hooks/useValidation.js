@@ -83,10 +83,18 @@ const useValidation = (initialValues, rules) => {
     (event) => {
       const { name, value } = event.target;
       setTouched((prevTouched) => ({ ...prevTouched, [name]: true }));
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        [name]: validateField(name, value) || undefined,
-      }));
+      setErrors((prevErrors) => {
+        const error = rules[name]?.validate
+          ? rules[name].validate(value, values) === true
+            ? undefined // If validate returns true, clear the error
+            : rules[name].validate(value, values) // Otherwise use the returned error
+          : validateField(name, value);
+
+        return {
+          ...prevErrors,
+          [name]: error || undefined, // Ensure falsy values become undefined
+        };
+      });
     },
     [validateField],
   );
