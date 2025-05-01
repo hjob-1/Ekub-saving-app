@@ -4,6 +4,7 @@ const SavingPlan = require('../models/SavingPlan');
 const { sendEmail } = require('./emailService');
 const User = require('../models/User');
 const sendResponse = require('./responseUtil');
+const { normalizeDate } = require('../util');
 
 const generatePayments = async (savingPlan) => {
   const payments = [];
@@ -79,13 +80,17 @@ const conductLottery = async (
     }).distinct('dueDate');
 
     // Step 2: Filter dueDates already used
+
+    const frequency = savingPlan.paymentPlan;
     const usedDates = savingPlan.winners
-      .filter((w) => w.dueDate) // make sure dueDate exists
-      .map((w) => w.dueDate.toISOString());
+      .filter((w) => w.dueDate)
+      .map((w) => normalizeDate(w.dueDate, frequency));
+
     console.log('usedDates', usedDates);
     const unusedDueDates = allDueDates.filter(
-      (date) => !usedDates.includes(new Date(date).toISOString()),
+      (date) => !usedDates.includes(normalizeDate(date, frequency)),
     );
+
     console.log('unusedDueDates', unusedDueDates);
     if (unusedDueDates.length === 0) {
       return sendResponse(
@@ -96,13 +101,18 @@ const conductLottery = async (
     }
 
     // Step 3: Pick the earliest available round
-    const nextDueDate = new Date(unusedDueDates.sort()[0]);
+    const nextDueDate = new Date(
+      unusedDueDates
+        .map((d) => new Date(d)) // convert all to Date objects
+        .sort((a, b) => a - b)[0], // sort chronologically
+    );
+    console.log('nextDueDate', nextDueDate);
 
     // Fetch users who have paid for the current period
     const paidUsers = await Payment.find({
       savingPlan: savingPlanId,
       isPaid: true,
-      dueDate: nextDueDate,
+      dueDate: new Date(nextDueDate),
     }).populate('user');
 
     if (paidUsers.length === 0) {

@@ -7,12 +7,18 @@ import {
   FaCheckCircle,
   FaCrown,
   FaUserPlus,
+  FaPlusCircle,
 } from 'react-icons/fa';
-import { getDashboardStatsApi } from '../../util/ApiUtil';
+import { Link } from 'react-router';
+
+import { createSavingPlanApi, getDashboardStatsApi } from '../../util/ApiUtil';
 import { useToken } from '../../context/getToken';
 import { formateDate } from '../../util/util';
 import { AppContext } from '../../context/applicationContext';
 import ErrorState from '../../components/ErrorState';
+import { FiExternalLink, FiUsers } from 'react-icons/fi';
+import CreateSavingPlanForm from '../../components/CreateSavingPlan';
+import { notify } from '../../util/notify';
 
 const Dashboard = () => {
   const token = useToken();
@@ -20,8 +26,8 @@ const Dashboard = () => {
   const [recentWinners, setRecentWinners] = useState([]);
   const [newUsers, setNewUsers] = useState([]);
   const [error, setError] = useState(null);
-  const appContext = useContext(AppContext);
-  const userData = appContext.getUserData();
+  const { setModal, openModal, getUserData } = useContext(AppContext);
+  const userData = getUserData();
 
   // Mock data fetching
   useEffect(() => {
@@ -62,12 +68,26 @@ const Dashboard = () => {
     }
   };
 
+  const createSavingPlan = async (planData) => {
+    try {
+      const response = await createSavingPlanApi(token, planData);
+      if (response.status === 1) {
+        setModal(null);
+        notify(response);
+        fetchDashboardStats();
+      }
+    } catch (error) {
+      notify(error);
+      console.error('Failed to create saving plan:', error);
+    }
+  };
+
   if (error) {
     return <ErrorState error={error} />;
   }
 
   return (
-    <div className="min-h-screen py-8 bg-gray-50">
+    <div className="min-h-screen py-2 bg-gray-50">
       {/* Main Content */}
       <div className="mb-6 ">
         <h1 className="text-2xl font-semibold text-gray-800">
@@ -78,17 +98,42 @@ const Dashboard = () => {
         </p>
       </div>
       <div>
+        <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+          <button
+            onClick={() =>
+              openModal(CreateSavingPlanForm, {
+                createSavingPlan: createSavingPlan,
+              })
+            }
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-2xl text-sm font-medium shadow-md hover:bg-indigo-700 transition-all duration-200 whitespace-nowrap"
+          >
+            <FaPlusCircle className="w-4 h-4" />
+            New Saving Plan
+          </button>
+
+          <Link
+            to="/user/members"
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-2xl text-sm font-medium shadow-md hover:bg-green-700 transition-all duration-200 whitespace-nowrap"
+          >
+            <FiUsers className="w-4 h-4" />
+            Invite Members
+          </Link>
+        </div>
         {/* Stats Overview */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Overview</h2>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard
-              icon={<FaUsers className="text-indigo-600" size={20} />}
-              title="Total Members"
-              value={stats?.totalMembers}
-              trend={5.2}
-              change="up"
-            />
+            <Link to="/user/members">
+              <StatCard
+                icon={<FaUsers className="text-indigo-600" size={20} />}
+                title="Total Members"
+                value={stats?.totalMembers}
+                trend={5.2}
+                change="up"
+                linkIcon={true}
+              />
+            </Link>
+
             <StatCard
               icon={<FaMoneyBillWave className="text-green-500" size={20} />}
               title="Money Collected"
@@ -96,13 +141,16 @@ const Dashboard = () => {
               trend={12.5}
               change="up"
             />
-            <StatCard
-              icon={<FaPiggyBank className="text-blue-500" size={20} />}
-              title="Saving Plans"
-              value={stats?.totalSavingPlans}
-              trend={2.1}
-              change="up"
-            />
+            <Link to="/user/saving-plans">
+              <StatCard
+                icon={<FaPiggyBank className="text-blue-500" size={20} />}
+                title="Saving Plans"
+                value={stats?.totalSavingPlans}
+                trend={2.1}
+                change="up"
+                linkIcon={true}
+              />
+            </Link>
             <StatCard
               icon={<FaHourglassHalf className="text-yellow-500" size={20} />}
               title="Active Users"
@@ -191,12 +239,13 @@ const Dashboard = () => {
   );
 };
 
-const StatCard = ({ icon, title, value }) => (
+const StatCard = ({ icon, title, value, linkIcon }) => (
   <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
     <div className="flex justify-between">
       <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
         {icon}
       </div>
+      {linkIcon && <FiExternalLink />}
     </div>
     <h3 className="text-gray-500 text-sm mt-4">{title}</h3>
     <p className="text-2xl font-bold text-gray-800 mt-1">{value}</p>

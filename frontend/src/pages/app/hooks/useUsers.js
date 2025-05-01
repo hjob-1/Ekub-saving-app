@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   deleteEkubMember,
   getEkubMembers,
@@ -24,21 +24,20 @@ export const useUsers = (token, initialLimit = 10) => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  useEffect(() => {
-    const fetchMemberStats = async () => {
-      try {
-        const res = await getEkubMemberStatsApi(token);
-        if (res.status === 1) {
-          setMemberStats(res.payload.data);
-          console.log(res.payload.data);
-        }
-      } catch (e) {
-        console.error('Fetch member stats failed', e);
+  const fetchMemberStats = useCallback(async () => {
+    try {
+      const res = await getEkubMemberStatsApi(token);
+      if (res.status === 1) {
+        setMemberStats(() => res.payload.data);
+        console.log(res.payload.data);
       }
-    };
-    fetchMemberStats();
+    } catch (e) {
+      console.error('Fetch member stats failed', e);
+    }
   }, [token]);
+  useEffect(() => {
+    fetchMemberStats();
+  }, [token, fetchMemberStats]);
   // Data fetcher receives page number
   const fetchMembers = useCallback(
     (page) =>
@@ -74,12 +73,13 @@ export const useUsers = (token, initialLimit = 10) => {
         if (res.status === 1) {
           notify(res);
           fetchPage(pagination.currentPage);
+          fetchMemberStats();
         }
       } catch (e) {
         console.error('Add user failed', e);
       }
     },
-    [token, fetchPage, pagination.currentPage],
+    [token, fetchPage, pagination.currentPage, fetchMemberStats],
   );
 
   const editUser = useCallback(
@@ -89,12 +89,13 @@ export const useUsers = (token, initialLimit = 10) => {
         if (res.status === 1) {
           notify(res);
           fetchPage(pagination.currentPage);
+          fetchMemberStats();
         }
       } catch (e) {
         console.error('Edit user failed', e);
       }
     },
-    [token, fetchPage, pagination.currentPage],
+    [token, fetchPage, pagination.currentPage, fetchMemberStats],
   );
 
   const deleteUser = useCallback(
@@ -109,13 +110,21 @@ export const useUsers = (token, initialLimit = 10) => {
               ? pagination.currentPage - 1
               : pagination.currentPage;
           fetchPage(nextPage);
+          fetchMemberStats();
           setPage(nextPage);
         }
       } catch (e) {
         console.error('Delete user failed', e);
       }
     },
-    [token, fetchPage, pagination.currentPage, users.length, setPage],
+    [
+      token,
+      fetchPage,
+      pagination.currentPage,
+      users.length,
+      setPage,
+      fetchMemberStats,
+    ],
   );
 
   // Initial load & refresh when token or search changes
@@ -137,5 +146,6 @@ export const useUsers = (token, initialLimit = 10) => {
     deleteUser,
     memberStats,
     setCurrentPage: setPage,
+    fetchMemberStats,
   };
 };

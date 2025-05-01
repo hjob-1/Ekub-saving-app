@@ -8,12 +8,13 @@ import {
   FiCheckCircle,
   FiDollarSign,
   FiArrowDown,
+  FiTrash2,
 } from 'react-icons/fi';
 import PerformanceCard from '../../components/PerformanceCard';
 import PlanCard from '../../components/PlanTable';
 import CreateSavingPlanForm from '../../components/CreateSavingPlan';
 import { notify } from '../../util/notify';
-import { createSavingPlanApi } from '../../util/ApiUtil';
+import { createSavingPlanApi, deleteSavingPlanApi } from '../../util/ApiUtil';
 import { useToken } from '../../context/getToken';
 import { useState } from 'react';
 import Pagination from '../../components/Pagination';
@@ -23,9 +24,11 @@ import { useSavingPlans } from './hooks/useSavingPlan';
 import LoadingSpinner from '../../components/Spinner';
 import SavingPlanStats from '../../components/savingPlan/SavingPlanStats';
 import ErrorState from '../../components/ErrorState';
+import DeleteConfirmationDialog from '../../components/DeleteConfirmationDialog';
 
 export default function SavingPlans() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState(null);
   const token = useToken();
   const {
     savingPlans,
@@ -39,6 +42,19 @@ export default function SavingPlans() {
     savingPlansStats,
   } = useSavingPlans(token);
 
+  const handleDeletePlan = async () => {
+    try {
+      const response = await deleteSavingPlanApi(token, planToDelete._id);
+      if (response.status === 1) {
+        notify({ message: 'Plan deleted successfully', status: 1 });
+        refresh();
+        setPlanToDelete(null);
+      }
+    } catch (error) {
+      notify(error);
+      console.error('Failed to delete saving plan:', error);
+    }
+  };
   const createSavingPlan = async (planData) => {
     try {
       const response = await createSavingPlanApi(token, planData);
@@ -91,10 +107,8 @@ export default function SavingPlans() {
           </button>
         </div>
       </PageHeader>
-
       {/* Performance Overview Cards */}
       <SavingPlanStats stats={savingPlansStats} />
-
       {/* Enhanced Section Transition */}
       <div className="mt-12 mb-8 relative">
         {/* Decorative line with fade effect */}
@@ -136,8 +150,18 @@ export default function SavingPlans() {
           )}
         </div>
       </div>
-
       {/* Plans Grid */}
+
+      <DeleteConfirmationDialog
+        isOpen={planToDelete}
+        onClose={() => setPlanToDelete(null)}
+        onConfirm={handleDeletePlan}
+        title="Remove Plan"
+        description={`This will permanently remove ${
+          planToDelete && planToDelete?.name
+        } from the system.`}
+        confirmText="Confirm Removal"
+      />
       {savingPlans.length > 0 && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -146,6 +170,7 @@ export default function SavingPlans() {
                 key={plan.id}
                 plan={plan}
                 onUpdate={refresh} // Refresh after any updates
+                onDelete={() => setPlanToDelete(plan)} // Add this prop
               />
             ))}
           </div>

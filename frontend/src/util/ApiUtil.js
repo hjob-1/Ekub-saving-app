@@ -320,6 +320,22 @@ export const updateSavingPlanPaymentsApi = async (token, id, paymentId) => {
   return response;
 };
 
+export const deleteSavingPlanApi = async (token, id) => {
+  let response = frameResponse();
+  try {
+    const url = `${API_BASE_URL}/ekubs/saving-plans/${id}`;
+    const apiResponse = await axios.delete(url, { ...authHeader(token) });
+    if (apiResponse.status === 200) {
+      response = frameResponse(1, apiResponse.data);
+    }
+  } catch (err) {
+    if (err.response) {
+      response = frameResponse(0, err.response.data);
+    }
+    console.log(err);
+  }
+  return response;
+};
 export const drawWinnerApi = async (token, id, excludedUsers) => {
   let response = frameResponse();
   try {

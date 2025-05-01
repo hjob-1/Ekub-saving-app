@@ -5,10 +5,11 @@ import {
   FiCalendar,
   FiClock,
   FiArrowRight,
+  FiTrash2,
 } from 'react-icons/fi';
 import Avator from './Avator';
 
-const PlanCard = ({ plan }) => {
+const PlanCard = ({ plan, onDelete }) => {
   const targetAmount = plan.amount * plan.participants.length ** 2;
 
   return (
@@ -29,6 +30,14 @@ const PlanCard = ({ plan }) => {
               ? `${plan.daysRemaining} days left`
               : 'Ended'}
           </span>
+          <button
+            onClick={() => onDelete(plan)}
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+            title="Delete plan"
+            aria-label="Delete plan"
+          >
+            <FiTrash2 />
+          </button>
         </div>
         {/* Add dropdown menu here if needed */}
       </div>
