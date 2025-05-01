@@ -51,11 +51,14 @@ const UserManagement = () => {
     setCurrentPage,
   } = useUsers(token);
 
-  const handleSubmit = useCallback(() => {
-    editingUser?._id ? editUser(editingUser) : addUser(editingUser);
-    setIsModalOpen(false);
-    setEditingUser(null);
-  }, [editingUser, addUser, editUser]);
+  const handleSubmit = useCallback(
+    (user) => {
+      user?._id ? editUser(user) : addUser(user);
+      setIsModalOpen(false);
+      setEditingUser(null);
+    },
+    [addUser, editUser],
+  );
 
   const handleEdit = useCallback((user) => {
     setEditingUser(user);
