@@ -10,6 +10,7 @@ import SavingPlans from '../pages/app/SavingPlan';
 import SavingPlanDetailPage from '../pages/app/SavingPlanDetailPage';
 import Dashboard from '../pages/app/dashboard';
 import UserManagement from '../pages/app/member';
+import Unauthorized from '../pages/app/Unauthorized';
 
 const routes = [
   {
@@ -51,6 +52,10 @@ const routes = [
   {
     path: '/user/reset-password',
     element: <ResetPassword />,
+  },
+  {
+    path: '/user/unauthorized',
+    element: <Unauthorized />,
   },
 ];
 export default routes;
