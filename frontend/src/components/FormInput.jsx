@@ -19,7 +19,7 @@ const FormInput = ({
     <div className="relative">
       {label && <label htmlFor={id}>{label}</label>}
       {icon && (
-        <div className="absolute left-3 top-3 text-gray-400">{icon}</div>
+        <div className="absolute left-3 top-10 text-gray-400">{icon}</div>
       )}
       <input
         className={`mt-1 block w-full rounded-md border ${
