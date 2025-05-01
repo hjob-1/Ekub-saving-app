@@ -10,6 +10,7 @@ import ErrorState from '../../../components/ErrorState';
 import MemberStats from '../../../components/MemberStats';
 import MemberList from '../../../components/MemberList';
 import Modal from '../../../components/Modal';
+import DeleteConfirmationDialog from '../../../components/DeleteConfirmationDialog';
 
 const SearchAndAddMember = ({ searchTerm, onSearchChange, onAddMember }) => (
   <div className="flex gap-3 w-full sm:w-auto">
@@ -36,7 +37,7 @@ const UserManagement = () => {
   const token = getSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-
+  const [planToDeleteId, setPlanToDeleteId] = useState(null);
   const {
     users,
     addUser,
@@ -65,7 +66,10 @@ const UserManagement = () => {
     setEditingUser((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleDelete = useCallback((id) => deleteUser(id), [deleteUser]);
+  const handleDelete = () => {
+    deleteUser(planToDeleteId), [deleteUser];
+    setPlanToDeleteId(null);
+  };
 
   if (error) {
     return <ErrorState error={error} />;
@@ -116,12 +120,20 @@ const UserManagement = () => {
         <h2 className="text-2xl font-bold text-gray-800">Member Directory</h2>
       </div>
 
+      <DeleteConfirmationDialog
+        isOpen={planToDeleteId}
+        onClose={() => setPlanToDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Remove Member"
+        description="Permanently remove this member? This cannot be undone."
+        confirmText="Remove"
+      />
       <MemberList
         users={users}
         isLoading={isLoading}
         searchTerm={searchTerm}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={setPlanToDeleteId}
         pagination={pagination}
         onPageChange={setCurrentPage}
         setIsModalOpen={setIsModalOpen}

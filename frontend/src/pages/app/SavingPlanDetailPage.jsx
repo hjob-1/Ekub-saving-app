@@ -85,7 +85,7 @@ const SavingPlanDetailPage = () => {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <Breadcrumb
         items={[
-          { label: 'Dashboard' },
+          { label: 'Dashboard', href: '/user/' },
           { label: 'Saving plans', href: '/user/saving-plans' },
           { label: savingPlanStats?.name || '' },
         ]}

@@ -19,6 +19,19 @@ const getEndDate = (startDate, paymentPlan, noOfParticipants) => {
   return endDate;
 };
 
+const normalizeDate = (date, frequency) => {
+  const d = new Date(date);
+  switch (frequency) {
+    case 'monthly':
+      return `${d.getFullYear()}-${(d.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}`;
+    default:
+      return d.toISOString(); // keeps weekly and biweekly as is
+  }
+};
+
 module.exports = {
   getEndDate,
+  normalizeDate,
 };

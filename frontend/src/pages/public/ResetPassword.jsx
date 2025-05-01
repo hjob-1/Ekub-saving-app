@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { resetPassword } from '../../util/ApiUtil';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -96,12 +96,12 @@ const ResetPassword = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Back to{' '}
-            <a
-              href="/login"
+            <Link
+              to="/user/login"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
               Log in
-            </a>
+            </Link>
           </p>
         </div>
       </div>
