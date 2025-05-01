@@ -5,8 +5,8 @@ import {
   getEkubMemberStatsApi,
   registerUserToEkubApi,
   updateEkubMember,
-} from '../../../util/ApiUtil';
-import { notify } from '../../../util/notify';
+} from '../util/ApiUtil';
+import { notify } from '../util/notify';
 import { usePaginatedData } from './usePaginatedData';
 
 /**

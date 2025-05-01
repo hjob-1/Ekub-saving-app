@@ -4,25 +4,58 @@ import { getEkubMembers } from '../util/ApiUtil';
 
 import { formateSavingPlan } from '../util/util';
 import { useToken } from '../context/getToken';
+import useValidation from '../hooks/useValidation';
+import FormInput from './FormInput';
+import { FaExclamationCircle } from 'react-icons/fa';
 
 const CreateSavingPlanForm = ({ createSavingPlan }) => {
-  const [form, setForm] = useState({
-    name: '',
-    amount: '',
-    startDate: '',
-    endDate: '',
-    paymentPlan: 'weekly',
-    participants: [],
-  });
-
+  const token = useToken();
   const [userQuery, setUserQuery] = useState('');
   const [userSuggestions, setUserSuggestions] = useState([]);
-  const token = useToken();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  // Define validation rules
+  const validationRules = {
+    name: {
+      label: 'Plan name',
+      required: true,
+      minLength: 3,
+      maxLength: 50,
+    },
+    amount: {
+      label: 'Amount',
+      required: true,
+      pattern: /^[1-9]\d*$/,
+      message: 'Please enter a valid positive number',
+    },
+    startDate: {
+      label: 'Start date',
+      required: true,
+    },
+    participants: {
+      label: 'Participants',
+      minItems: 2,
+      message: 'You must select at least 2 participants',
+    },
   };
+
+  const {
+    values: form,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    setValues,
+  } = useValidation(
+    {
+      name: '',
+      amount: '',
+      startDate: '',
+      paymentPlan: 'weekly',
+      participants: [],
+    },
+    validationRules,
+  );
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -34,7 +67,6 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
           page: 1,
         });
         if (res.status === 1) {
-          console.log("'Fetched users:", res.payload.data);
           setUserSuggestions(res.payload.data.data);
         }
       } catch (err) {
@@ -50,12 +82,10 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
   }, [userQuery, token]);
 
   const addParticipant = (user) => {
-    if (!form.participants.includes(user._id)) {
-      let participants = form.participants;
-      participants.push(user);
-      setForm((prev) => ({
+    if (!form.participants.some((p) => p._id === user._id)) {
+      setValues((prev) => ({
         ...prev,
-        participants: [...participants],
+        participants: [...prev.participants, user],
       }));
     }
     setUserQuery('');
@@ -63,7 +93,7 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
   };
 
   const removeParticipant = (remUser) => {
-    setForm((prev) => ({
+    setValues((prev) => ({
       ...prev,
       participants: prev.participants.filter(
         (user) => user._id !== remUser._id,
@@ -71,15 +101,13 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', form);
-    createSavingPlan(formateSavingPlan(form));
+  const onSubmit = (formValues) => {
+    createSavingPlan(formateSavingPlan(formValues));
   };
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={(e) => handleSubmit(e, onSubmit)}
       className="max-w-lg mx-auto bg-white p-6 rounded shadow-md space-y-4"
     >
       <h2 className="text-xl text-center font-semibold mb-4">
@@ -87,60 +115,51 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
       </h2>
 
       {/* Plan Name */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Plan Name
-        </label>
-        <input
-          name="name"
-          type="text"
-          value={form.name}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-gray-300 focus:border-indigo-600 focus:outline-none p-1"
-          required
-        />
-      </div>
+      <FormInput
+        name="name"
+        label="Plan Name"
+        type="text"
+        value={form.name}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        error={errors.name}
+        touched={touched.name}
+        placeholder="Enter plan name"
+      />
 
       {/* Amount */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Amount
-        </label>
-        <input
-          name="amount"
-          type="number"
-          value={form.amount}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-gray-300 focus:border-indigo-600 focus:outline-none p-1"
-          required
-        />
-      </div>
+      <FormInput
+        name="amount"
+        label="Amount"
+        type="number"
+        value={form.amount}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        error={errors.amount}
+        touched={touched.amount}
+        placeholder="Enter amount"
+      />
 
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Start Date
-          </label>
-          <input
-            name="startDate"
-            type="date"
-            value={form.startDate}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 focus:border-indigo-600 focus:outline-none p-1"
-            required
-          />
-        </div>
+        <FormInput
+          name="startDate"
+          label="Start Date"
+          type="date"
+          value={form.startDate}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={errors.startDate}
+          touched={touched.startDate}
+        />
+
         {/* Payment Plan */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Payment Plan
-          </label>
           <select
             name="paymentPlan"
             value={form.paymentPlan}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 focus:border-indigo-600 focus:outline-none p-1 "
+            className="mt-1 block w-full rounded-md border border-gray-300 focus:border-indigo-600 focus:outline-none p-2"
           >
             <option value="weekly">Weekly</option>
             <option value="biweekly">Biweekly</option>
@@ -150,7 +169,6 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
       </div>
 
       {/* Participants Search and Select */}
-
       <MultiSelectSearchInput
         label="Add Participants"
         placeholder="Search users..."
@@ -163,11 +181,18 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
         renderItem={(user) => `${user.fullname}`}
         getItemId={(user) => user._id}
       />
+      {errors.participants && touched && (
+        <div className="flex items-center mt-1 text-red-500 text-xs">
+          <FaExclamationCircle className="mr-1" />
+          <span>{errors.participants}</span>
+        </div>
+      )}
 
-      {/* Submit */}
+      {/* Submit Button */}
       <button
         type="submit"
-        className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 transition"
+        disabled={Object.values(errors).some((error) => !!error)}
+        className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Create Plan
       </button>

@@ -5,7 +5,7 @@ import Button from '../Button';
 import LoadingSpinner from '../Spinner';
 import WinnerDisplay from './DisplayWinner';
 import MultiSelectSearchInput from '../MultiSelectSearchInput';
-import useMultiSelect from '../../pages/app/hooks/useMultiSelect';
+import useMultiSelect from '../../hooks/useMultiSelect';
 import { drawWinnerApi, getEkubMembers } from '../../util/ApiUtil';
 import { notify } from '../../util/notify';
 

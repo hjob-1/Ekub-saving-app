@@ -5,10 +5,11 @@ import Login from '../pages/public/Login';
 import VerifyEmail from '../pages/public/VerifyEmail';
 import ForgotPassword from '../pages/public/ForgotPassword';
 import ResetPassword from '../pages/public/ResetPassword';
-import UserManagement from '../pages/app/addMember/member';
+
 import SavingPlans from '../pages/app/SavingPlan';
 import SavingPlanDetailPage from '../pages/app/SavingPlanDetailPage';
 import Dashboard from '../pages/app/dashboard';
+import UserManagement from '../pages/app/member';
 
 const routes = [
   {

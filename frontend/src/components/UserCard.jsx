@@ -1,5 +1,5 @@
 import { FiEdit2, FiMail, FiPhone, FiTrash2 } from 'react-icons/fi';
-import Avator from '../../../components/Avator';
+import Avator from './Avator';
 
 // user card
 const UserCard = ({ user, onEdit, onDelete }) => {

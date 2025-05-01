@@ -6,7 +6,7 @@ import {
   updateSavingPlanPaymentsApi,
   getSavingPlansApi,
   getSavingPlansStatsApi,
-} from '../../../util/ApiUtil';
+} from '../util/ApiUtil';
 import { usePaginatedData } from './usePaginatedData'; // Import the reusable hook
 
 export const useDetailSavingPlan = (token, savingId, limit) => {

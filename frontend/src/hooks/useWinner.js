@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { getSavingPlanWinnersApi } from '../../../util/ApiUtil';
+import { getSavingPlanWinnersApi } from '../util/ApiUtil';
 import { usePaginatedData } from './usePaginatedData';
 
 export const useSavingPlanWinners = (token, savingId, limit) => {
