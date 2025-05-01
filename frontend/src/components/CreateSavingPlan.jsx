@@ -155,7 +155,9 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
 
         {/* Payment Plan */}
         <div>
+          <label htmlFor="plan">Payment Plan</label>
           <select
+            id="plan"
             name="paymentPlan"
             value={form.paymentPlan}
             onChange={handleChange}

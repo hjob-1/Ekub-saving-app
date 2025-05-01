@@ -17,6 +17,7 @@ const FormInput = ({
 }) => {
   return (
     <div className="relative">
+      {label && <label htmlFor={id}>{label}</label>}
       {icon && (
         <div className="absolute left-3 top-3 text-gray-400">{icon}</div>
       )}
