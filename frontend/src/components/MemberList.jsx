@@ -1,8 +1,7 @@
-import UserCard from '../pages/app/addMember/UserCard';
 import EmptyState from './EmptyState';
 import Pagination from './Pagination';
 import LoadingSpinner from './Spinner';
-
+import UserCard from './UserCard';
 const MemberList = ({
   users,
   isLoading,

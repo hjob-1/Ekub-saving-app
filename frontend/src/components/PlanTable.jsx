@@ -30,16 +30,16 @@ const PlanCard = ({ plan, onDelete }) => {
               ? `${plan.daysRemaining} days left`
               : 'Ended'}
           </span>
-          <button
-            onClick={() => onDelete(plan)}
-            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-            title="Delete plan"
-            aria-label="Delete plan"
-          >
-            <FiTrash2 />
-          </button>
         </div>
         {/* Add dropdown menu here if needed */}
+        <button
+          onClick={() => onDelete(plan)}
+          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+          title="Delete plan"
+          aria-label="Delete plan"
+        >
+          <FiTrash2 />
+        </button>
       </div>
 
       {/* Plan title as link */}

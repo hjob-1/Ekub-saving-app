@@ -4,7 +4,6 @@ import PageHeader from '../../components/header';
 import TabPanel from '../../components/TabPanel';
 import { useToken } from '../../context/getToken';
 
-import { useDetailSavingPlan } from './hooks/useSavingPlan';
 import StatsCards from '../../components/savingPlan/StatsCards';
 import PaymentList from '../../components/savingPlan/PaymentList';
 import Pagination from '../../components/Pagination';
@@ -13,7 +12,8 @@ import { useState } from 'react';
 import Modal from '../../components/Modal';
 import { useParams } from 'react-router';
 import WinnerList from '../../components/savingPlan/WinnerList';
-import { useSavingPlanWinners } from './hooks/useWinner';
+import { useDetailSavingPlan } from '../../hooks/useSavingPlan';
+import { useSavingPlanWinners } from '../../hooks/useWinner';
 import EmailReminderButton from '../../components/EmailReminderButton';
 import { FiAlertCircle } from 'react-icons/fi';
 import { sendReminderApi } from '../../util/ApiUtil';

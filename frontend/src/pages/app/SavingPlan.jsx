@@ -1,30 +1,18 @@
-import {
-  FiUsers,
-  FiTrendingUp,
-  FiCalendar,
-  FiSearch,
-  FiPlus,
-  FiAward,
-  FiCheckCircle,
-  FiDollarSign,
-  FiArrowDown,
-  FiTrash2,
-} from 'react-icons/fi';
-import PerformanceCard from '../../components/PerformanceCard';
-import PlanCard from '../../components/PlanTable';
-import CreateSavingPlanForm from '../../components/CreateSavingPlan';
-import { notify } from '../../util/notify';
-import { createSavingPlanApi, deleteSavingPlanApi } from '../../util/ApiUtil';
-import { useToken } from '../../context/getToken';
 import { useState } from 'react';
-import Pagination from '../../components/Pagination';
+import { useToken } from '../../context/getToken';
+import { useSavingPlans } from '../../hooks/useSavingPlan';
+import { createSavingPlanApi, deleteSavingPlanApi } from '../../util/ApiUtil';
+import { notify } from '../../util/notify';
+import LoadingSpinner from '../../components/Spinner';
+import ErrorState from '../../components/ErrorState';
 import Breadcrumb from '../../components/Breadcrumb';
 import PageHeader from '../../components/header';
-import { useSavingPlans } from './hooks/useSavingPlan';
-import LoadingSpinner from '../../components/Spinner';
 import SavingPlanStats from '../../components/savingPlan/SavingPlanStats';
-import ErrorState from '../../components/ErrorState';
+import PlanCard from '../../components/PlanTable';
+import { FiArrowDown, FiPlus, FiSearch, FiUsers } from 'react-icons/fi';
 import DeleteConfirmationDialog from '../../components/DeleteConfirmationDialog';
+import Pagination from '../../components/Pagination';
+import CreateSavingPlanForm from '../../components/CreateSavingPlan';
 
 export default function SavingPlans() {
   const [isModalOpen, setIsModalOpen] = useState(false);

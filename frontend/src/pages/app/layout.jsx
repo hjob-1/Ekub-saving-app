@@ -27,13 +27,14 @@ function AppLayout({ children }) {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
           {/* Logo */}
-          <div className="flex flex items-center justify-center gap-3 font-mono">
-            <h2 className="text-4xl font-bold  text-center text-gray-800 text-indigo-600">
-              equb
-            </h2>
-            <GiPayMoney className="text-4xl text-indigo-600 " />
-          </div>
-
+          <Link to="/user/">
+            <div className="flex flex items-center justify-center gap-3 font-mono">
+              <h2 className="text-3xl font-bold  text-center text-gray-800 text-indigo-600">
+                equb
+              </h2>
+              <GiPayMoney className="text-3xl text-indigo-600 " />
+            </div>
+          </Link>
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
