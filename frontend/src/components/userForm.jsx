@@ -56,9 +56,7 @@ const UserForm = ({ user = {}, onSubmit, onCancel }) => {
   const submitHandler = (formValues) => {
     onSubmit(formValues);
   };
-  console.log('Object.keys(errors).length > 0', Object.keys(errors).length > 0);
-  console.log('Object.keys(errors).length > 0', Object.keys(errors).length);
-  console.log(errors);
+
   return (
     <div className="bg-white rounded-xl p-8 w-full max-w-sm shadow-[0px_3px_35px_rgba(0,0,0,0.01),0px_3px_25px_rgba(0,0,0,0.08)]">
       <form

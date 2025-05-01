@@ -56,7 +56,6 @@ const CreateSavingPlanForm = ({ createSavingPlan }) => {
     },
     validationRules,
   );
-  console.log('error', errors);
 
   useEffect(() => {
     const fetchUsers = async () => {
