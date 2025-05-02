@@ -1,12 +1,28 @@
-import React, { createElement, useState } from 'react';
+import React, { createElement, useEffect, useState } from 'react';
 import { useCookies } from 'react-cookie';
 
 const AppContext = React.createContext();
 
 const AppContextProvider = ({ children }) => {
-  const [cookies, setCookie, removeCookie] = useCookies(['appToken']);
-  const [userSessionData, setUserSessionData] = useState(undefined);
+  const [cookies, setCookie, removeCookie] = useCookies([
+    'appToken',
+    'userData',
+  ]);
+  const [userSessionData, setUserSessionData] = useState(null);
   const [modal, setModal] = useState(null);
+
+  // Initialize user data from cookies on mount
+  useEffect(() => {
+    const storedUserData = cookies.userData;
+    if (storedUserData) {
+      try {
+        setUserSessionData(storedUserData);
+      } catch (e) {
+        console.error('Failed to parse user data', e);
+        removeCookie('userData', { path: '/' });
+      }
+    }
+  }, [cookies.userData, removeCookie]);
 
   const openModal = (component, props) => {
     setModal({ component, props });
@@ -21,10 +37,20 @@ const AppContextProvider = ({ children }) => {
     const token = cookies.appToken || null;
     return token;
   };
-  const setUserData = (userData) => setUserSessionData(userData);
+  const setUserData = (userData) => {
+    setUserSessionData(userData);
+    setCookie('userData', JSON.stringify(userData), {
+      path: '/',
+      maxAge: 1296000, //2weeks
+      secure: true, // HTTPS only
+      sameSite: 'strict', // Prevent CSRF
+    });
+  };
+
   const getUserData = () => userSessionData;
   const logout = () => {
     removeCookie('appToken', { path: '/' });
+    removeCookie('userData', { path: '/' });
     setUserData(undefined);
   };
   return (
