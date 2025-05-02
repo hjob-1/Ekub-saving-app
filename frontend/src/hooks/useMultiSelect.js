@@ -19,7 +19,8 @@ const useMultiSelect = ({ fetchFn, identifierKey = '_id' }) => {
       setIsLoading(true);
       const response = await fetchFn(searchQuery);
       if (response.status === 1) {
-        setSuggestions(response.payload?.data || []);
+        console.log('esponse.payload?.data ', response.payload?.data.data);
+        setSuggestions(response.payload?.data.data || []);
       }
     } catch (err) {
       setError(err);

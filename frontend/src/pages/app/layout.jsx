@@ -11,14 +11,15 @@ function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const appContext = useContext(AppContext);
+  const userData = appContext.getUserData();
   const navigate = useNavigate();
-  const { isAuthorized } = useAuth(appContext.getUserData());
+  const { isAuthorized } = useAuth(userData);
 
   useEffect(() => {
-    if (!isAuthorized) {
+    if (!isAuthorized && userData) {
       return navigate('/user/unauthorized');
     }
-  }, [isAuthorized]);
+  }, [isAuthorized, userData, navigate]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleAvatarMenu = () => setAvatarMenuOpen(!avatarMenuOpen);

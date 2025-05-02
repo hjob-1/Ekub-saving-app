@@ -24,7 +24,8 @@ const WinnerDrawModal = ({ savingId }) => {
     addItem: addParticipant,
     removeItem: removeParticipant,
   } = useMultiSelect({
-    fetchFn: (searchQuery) => getEkubMembers(token, searchQuery),
+    fetchFn: (searchQuery) =>
+      getEkubMembers(token, { search: searchQuery, page: 1, limit: 10 }),
     identifierKey: '_id', // or 'email' if you prefer
   });
 
